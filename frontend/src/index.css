@@ -1,0 +1,98 @@
+/* ใส่ ./ เพื่อบังคับให้มันมองหาจากจุดที่ไฟล์ index.css นี้วางอยู่ */
+@import "tailwindcss";
+@import "./styles/variables.css"; 
+@import "./styles/main.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. การกำหนด Style หลักของระบบ */
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 4px 8px;
+  background: var(--code-bg);
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+@media (max-width: 1024px) {
+  :root { font-size: 16px; }
+  h1 { font-size: 36px; margin: 20px 0; }
+  h2 { font-size: 20px; }
+}
+
+@keyframes move-lines {
+  0% { background-position: 0 0; }
+  100% { background-position: 100% 100%; }
+}
+
+.animate-move-lines {
+  animation: move-lines 3s linear infinite;
+}
+
+@keyframes lines-shift {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-lines {
+  animation: lines-shift 5s linear infinite;
+}
+
+@layer utilities {
+  @keyframes move-lines-fast {
+    0% { background-position: 0 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-move-lines-fast {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255,255,255,0.2) 0 2px,
+      transparent 2px 4px
+    );
+    background-size: 200% 200%;
+    animation: move-lines-fast 2s linear infinite;
+  }
+}
