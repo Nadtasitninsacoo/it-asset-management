@@ -4,16 +4,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AssetsService } from './assets.service';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname } from 'path';
 
-const storageConfig = diskStorage({
-    destination: './public/uploads',
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-    },
-});
+const storageConfig = memoryStorage();
 
 @Controller('assets')
 export class AssetsController {
@@ -30,7 +24,7 @@ export class AssetsController {
             serialNumber: body.serialNumber,
             status: body.status || 'AVAILABLE',
             category: body.category,
-            image: file ? `/uploads/${file.filename}` : body.image,
+            image: body.image || '/uploads/default-asset.png',
         };
 
         return await this.assetsService.createAsset(assetData);
@@ -61,9 +55,7 @@ export class AssetsController {
             category: body.category,
         };
 
-        if (file) {
-            updateData.image = `/uploads/${file.filename}`;
-        } else if (body.image) {
+        if (body.image) {
             updateData.image = body.image;
         }
 
