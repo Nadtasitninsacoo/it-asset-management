@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// 🛡️ ใช้ความระมัดระวังสูงสุด: ตรวจสอบว่าไม่มีช่องว่างในชื่อตัวแปร
+// 🛡️ ระบบจะดึงพิกัดจาก Vercel Settings (VITE_API_URL) หรือใช้ localhost ถ้าตรวจไม่เจอ
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-console.log('📡 Current API BaseURL:', baseURL); // 🔍 เพิ่มบรรทัดนี้เพื่อเช็คพิกัดใน Console
 
 const api = axios.create({
     baseURL: baseURL,
