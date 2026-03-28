@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql://void_commander_db_user:6jvFQeVhMH8NHyl0V2CRb7pqEjtV0Kse@dpg-d6q21psr85hc73c1m4r0-a/void_commander_db"
   url      = env("DATABASE_URL")
 }
 
