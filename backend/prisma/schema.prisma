@@ -2,7 +2,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-atasource db {
+datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
@@ -22,7 +22,7 @@ model Asset {
   id           Int             @id @default(autoincrement())
   name         String
   serialNumber String          @unique
-  category     String   @default("General")
+  category     String          @default("General")
   status       String          @default("AVAILABLE")
   image        String?         @db.Text
   requests     BorrowRequest[]
