@@ -25,7 +25,7 @@ const Register = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:3000/auth/register', formData);
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, formData);
 
             if (response.data.access_token) {
                 localStorage.setItem('access_token', response.data.access_token);
