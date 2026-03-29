@@ -138,62 +138,98 @@ const ManageRequests = () => {
                                 if (visibleRequests.length > 0) {
                                     return visibleRequests.map((req) => (
                                         <tr key={req.id} className="hover:bg-slate-50/30 transition group text-slate-900">
+                                            {/* 👤Personnel */}
                                             <td className="p-4">
                                                 <div className="font-bold text-[11px] uppercase">{req.user?.name || 'Unknown'}</div>
                                                 <div className="text-[9px] text-slate-400 font-medium uppercase">{req.user?.department || 'Sector N/A'}</div>
                                             </td>
+
+                                            {/* 📦 Asset */}
                                             <td className="p-4">
                                                 <div className="font-bold text-indigo-600 text-[11px] uppercase">{req.asset?.name}</div>
                                                 <div className="text-[9px] font-mono text-slate-400 font-bold tracking-tight">SN: {req.asset?.serialNumber}</div>
                                             </td>
+
+                                            {/* 📅 Timeline */}
                                             <td className="p-4 text-center">
                                                 <div className="text-[10px] font-bold text-slate-600">{new Date(req.createdAt).toLocaleDateString()}</div>
                                                 <Lucide.ArrowDown size={10} className="mx-auto my-0.5 text-slate-300" />
                                                 <div className="text-[10px] font-bold text-rose-500">{new Date(req.expectedReturn).toLocaleDateString()}</div>
                                             </td>
+
+                                            {/* 🚦 Status Badge */}
                                             <td className="p-4 text-center">
                                                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border ${req.status === 'APPROVED' ? 'bg-indigo-50 text-indigo-600 border-indigo-100 animate-pulse' :
-                                                    req.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                        req.status === 'RETURNED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                            req.status === 'DELETE' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-slate-50 text-slate-400'
+                                                        req.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                            req.status === 'RETURNED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                                req.status === 'REJECTED' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                                    req.status === 'DELETE' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-slate-50 text-slate-400'
                                                     }`}>
-                                                    {req.status === 'APPROVED' ? 'ยืมใช้งานอยู่' : req.status}
+                                                    {req.status === 'APPROVED' ? 'กำลังยืมใช้งาน' :
+                                                        req.status === 'PENDING' ? 'รอการอนุมัติ' :
+                                                            req.status === 'RETURNED' ? 'คืนสำเร็จแล้ว' :
+                                                                req.status === 'REJECTED' ? 'ปฏิเสธคำขอ' : req.status}
                                                 </span>
                                             </td>
+
+                                            {/* 🎮 Command Center (Easy for HR) */}
                                             <td className="p-4">
-                                                <div className="flex justify-center gap-1.5">
+                                                <div className="flex justify-center items-center gap-2">
                                                     {isAdmin && (
-                                                        <div className="flex items-center gap-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            {/* --- การลบรายการ --- */}
                                                             {req.status === 'DELETE' ? (
-                                                                <button onClick={() => handlePermanentDelete(req.id, req.asset.name)} className="p-2 bg-rose-600 text-white rounded-xl hover:bg-rose-800 transition shadow-lg animate-bounce">
-                                                                    <Lucide.Skull size={14} />
+                                                                <button
+                                                                    onClick={() => handlePermanentDelete(req.id, req.asset.name)}
+                                                                    className="px-3 py-1.5 bg-rose-600 text-white rounded-xl font-bold text-[9px] uppercase hover:bg-rose-800 transition shadow-lg flex items-center gap-1 animate-bounce"
+                                                                >
+                                                                    <Lucide.Skull size={12} /> ยืนยันลบถาวร
                                                                 </button>
                                                             ) : (
-                                                                <button onClick={() => handleAction(req.id, 'DELETE', req.asset.name)} className="p-2 text-slate-300 hover:text-rose-600 transition">
-                                                                    <Lucide.Trash2 size={14} />
+                                                                <button
+                                                                    onClick={() => handleAction(req.id, 'DELETE', req.asset.name)}
+                                                                    className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                                                                    title="ย้ายไปสถานะลบ"
+                                                                >
+                                                                    <Lucide.Trash2 size={16} />
                                                                 </button>
                                                             )}
+
+                                                            {/* --- การจัดการคำขอ (Pending) --- */}
                                                             {req.status === 'PENDING' && (
-                                                                <>
-                                                                    <button onClick={() => handleAction(req.id, 'APPROVED', req.asset.name)} className="p-2 bg-slate-900 text-white rounded-xl hover:bg-indigo-600 shadow-lg active:scale-90 transition">
-                                                                        <Lucide.ShieldCheck size={14} />
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={() => handleAction(req.id, 'APPROVED', req.asset.name)}
+                                                                        className="px-4 py-1.5 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase hover:bg-indigo-600 transition shadow-md flex items-center gap-1.5"
+                                                                    >
+                                                                        <Lucide.ShieldCheck size={12} /> อนุมัติยืม
                                                                     </button>
-                                                                    <button onClick={() => handleAction(req.id, 'REJECTED', req.asset.name)} className="p-2 bg-white text-rose-500 border border-rose-100 rounded-xl hover:bg-rose-50 active:scale-90 transition">
-                                                                        <Lucide.ShieldX size={14} />
+                                                                    <button
+                                                                        onClick={() => handleAction(req.id, 'REJECTED', req.asset.name)}
+                                                                        className="px-4 py-1.5 bg-white text-rose-500 border border-rose-100 rounded-xl font-black text-[9px] uppercase hover:bg-rose-50 transition flex items-center gap-1.5"
+                                                                    >
+                                                                        <Lucide.ShieldX size={12} /> ปฏิเสธ
                                                                     </button>
-                                                                </>
-                                                            )}
-                                                            {req.status === 'APPROVED' && (
-                                                                <button onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)} className="px-4 py-2 bg-emerald-500 text-white rounded-xl font-black text-[9px] uppercase hover:bg-emerald-600 shadow-lg flex items-center gap-1.5 active:scale-95 transition-all">
-                                                                    <Lucide.RotateCcw size={12} /> RECV
-                                                                </button>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     )}
-                                                    {!isAdmin && req.status === 'APPROVED' && (
-                                                        <button onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)} className="px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-600 shadow-lg flex items-center gap-1.5 active:scale-95 transition-all">
-                                                            <Lucide.RotateCcw size={12} /> คืนอุปกรณ์
+
+                                                    {/* --- การคืนอุปกรณ์ --- */}
+                                                    {req.status === 'APPROVED' && (
+                                                        <button
+                                                            onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)}
+                                                            className="px-5 py-2 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase hover:bg-emerald-600 shadow-lg shadow-emerald-100 flex items-center gap-2 active:scale-95 transition-all"
+                                                        >
+                                                            <Lucide.RotateCcw size={13} /> รับคืนอุปกรณ์
                                                         </button>
+                                                    )}
+
+                                                    {/* --- สถานะจบรายการ --- */}
+                                                    {req.status === 'RETURNED' && (
+                                                        <div className="flex items-center gap-1.5 text-emerald-600 font-black text-[9px] uppercase bg-emerald-50 px-4 py-1.5 rounded-xl border border-emerald-100">
+                                                            <Lucide.CheckCircle2 size={14} /> ทำรายการสำเร็จ
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>
@@ -204,7 +240,7 @@ const ManageRequests = () => {
                                         <tr>
                                             <td colSpan={5} className="p-24 text-center">
                                                 <Lucide.DatabaseZap size={40} className="mx-auto text-slate-200 mb-3" />
-                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">No Data Found</p>
+                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">ไม่พบประวัติการทำรายการ</p>
                                             </td>
                                         </tr>
                                     );
