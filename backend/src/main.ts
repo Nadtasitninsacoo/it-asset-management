@@ -44,5 +44,5 @@ if (process.env.NODE_ENV !== 'production') {
 
 export default async (req: any, res: any) => {
   const app = await bootstrap();
-  return app(req, res);
+  return app(req, res); 
 };
