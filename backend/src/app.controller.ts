@@ -7,7 +7,6 @@ export class AppController {
 
   @Get()
   getHello() {
-    // คืนค่าเป็น Object ซึ่ง NestJS จะแปลงเป็น JSON ให้เองอัตโนมัติครับ
     return this.appService.getWelcomeMessage();
   }
 }

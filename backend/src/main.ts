@@ -10,14 +10,14 @@ async function bootstrap() {
   if (!cachedApp) {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-    // 🛡️ ตั้งค่าพิกัดหน้าด่านเป็น /api (เพื่อให้เหมือน server.ts เดิม)
-    app.setGlobalPrefix('api');
+    app.setGlobalPrefix('api', {
+      exclude: ['/'],
+    });
 
     app.useStaticAssets(join(process.cwd(), 'public', 'uploads'), {
       prefix: '/uploads/',
     });
 
-    // 🛡️ เปิดประตูรับสัญญาณจากทุกทิศทาง
     app.enableCors({
       origin: true,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -35,11 +35,10 @@ async function bootstrap() {
   return cachedApp;
 }
 
-// ⚔️ สำหรับรันในฐานที่มั่น (Local Development)
 if (process.env.NODE_ENV !== 'production') {
   const startLocal = async () => {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    app.setGlobalPrefix('api'); // ต้องมี api เหมือนกัน
+    app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     app.enableCors();
     const port = process.env.PORT ?? 3000;
@@ -49,8 +48,7 @@ if (process.env.NODE_ENV !== 'production') {
   startLocal();
 }
 
-// ⚔️ สำหรับส่งออกไปยังสมรภูมิ Vercel (Serverless)
 export default async (req: any, res: any) => {
   const app = await bootstrap();
-  return app(req, res); 
+  return app(req, res);
 };
