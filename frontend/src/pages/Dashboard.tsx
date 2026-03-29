@@ -19,14 +19,17 @@ const Dashboard = () => {
         const fetchDashboardData = async () => {
             try {
                 const response = await api.get('/assets');
-                const assets: Asset[] = response.data;
 
-                setStats({
-                    total: assets.length,
-                    available: assets.filter(a => a.status === 'AVAILABLE').length,
-                    inUse: assets.filter(a => a.status === 'IN_USE').length,
-                    maintenance: assets.filter(a => a.status === 'MAINTENANCE').length,
-                });
+                const assets: Asset[] = response.data.data || response.data;
+
+                if (Array.isArray(assets)) {
+                    setStats({
+                        total: assets.length,
+                        available: assets.filter(a => a.status === 'AVAILABLE').length,
+                        inUse: assets.filter(a => a.status === 'IN_USE').length,
+                        maintenance: assets.filter(a => a.status === 'MAINTENANCE').length,
+                    });
+                }
             } catch (error) {
                 console.error("Error fetching assets:", error);
             }

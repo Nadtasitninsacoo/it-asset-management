@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate, Link } from 'react-router-dom';
 import * as Lucide from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -14,7 +14,7 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+            const response = await api.post('/auth/login', {
                 username,
                 password
             });
@@ -25,7 +25,7 @@ const Login = () => {
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('role', user.role);
 
-            notify.success('Access Granted', `ยินดีต้อนรับกลับมาครับ ท่านจอมพล ${user.name}`);
+            notify.success('เข้าสู่ระบบสำเร็จ', `สวัสดีครับคุณ ${user.name}`);
 
             setTimeout(() => {
                 if (user.role === 'ADMIN') {
@@ -33,16 +33,20 @@ const Login = () => {
                 } else {
                     navigate('/borrow-assets');
                 }
-            }, 500);
+            }, 800);
 
         } catch (error: any) {
             console.error('Login Error:', error);
+
             const status = error.response?.status;
+            const serverMessage = error.response?.data?.message;
 
             if (status === 401) {
-                notify.error('Login Failed', 'รหัสลับไม่ถูกต้อง! บัตรผ่านของท่านไม่ได้รับการอนุมัติ');
+                notify.error('เข้าสู่ระบบไม่สำเร็จ', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+            } else if (status === 404) {
+                notify.error('ไม่พบเซิร์ฟเวอร์', 'พิกัด API ไม่ถูกต้อง กรุณาเช็ค baseURL');
             } else {
-                notify.error('System Offline', 'ติดต่อศูนย์บัญชาการไม่ได้! กรุณาเช็ค Backend และ MySQL');
+                notify.error('ระบบขัดข้อง', serverMessage || 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ในขณะนี้');
             }
         }
     };

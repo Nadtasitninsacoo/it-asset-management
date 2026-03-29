@@ -23,7 +23,7 @@ const BorrowAssets = () => {
     const fetchAssets = async (page = 1) => {
         try {
             setLoading(true);
-            const response = await axios.get(`http://localhost:3000/assets?page=${page}`);
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/assets?page=${page}`);
 
             if (response.data?.data) {
                 setAssets(response.data.data);

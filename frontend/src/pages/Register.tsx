@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
@@ -25,7 +25,7 @@ const Register = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, formData);
+            const response = await api.post('/auth/register', formData);
 
             if (response.data.access_token) {
                 localStorage.setItem('access_token', response.data.access_token);
@@ -33,7 +33,7 @@ const Register = () => {
                 localStorage.setItem('role', response.data.user.role);
             }
 
-            notify.success('ลงทะเบียนสำเร็จ', `ยินดีต้อนรับท่านจอมพล ${formData.name}`);
+            notify.success('ลงทะเบียนสำเร็จ', `ยินดีต้อนรับคุณ ${formData.name} เข้าสู่ระบบครับ`);
 
             setTimeout(() => {
                 navigate('/borrow-assets');
@@ -41,8 +41,10 @@ const Register = () => {
 
         } catch (error: any) {
             console.error('Register Error:', error);
-            const msg = error.response?.data?.message || 'การเชื่อมต่อศูนย์บัญชาการขัดข้อง';
-            notify.error('ลงทะเบียนล้มเหลว', Array.isArray(msg) ? msg[0] : msg);
+
+            const msg = error.response?.data?.message || 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ในขณะนี้';
+
+            notify.error('ลงทะเบียนไม่สำเร็จ', Array.isArray(msg) ? msg[0] : msg);
         }
     };
 

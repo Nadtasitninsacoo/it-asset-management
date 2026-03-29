@@ -1,12 +1,40 @@
-import { Controller, Post, Param, ParseIntPipe, Patch } from '@nestjs/common';
-import { BorrowService } from './borrow.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
-@Controller('borrow')
-export class BorrowController {
-    constructor(private readonly borrowService: BorrowService) { }
+@Injectable()
+export class BorrowService {
+    constructor(private prisma: PrismaService) { }
 
-    @Patch('approve/:id')
-    async approve(@Param('id', ParseIntPipe) id: number) {
-        return await this.borrowService.approveRequest(id);
+    async createRequest(data: any) {
+        return await this.prisma.borrowRequest.create({
+            data: {
+                userId: data.userId,
+                assetId: data.assetId,
+                expectedReturn: new Date(data.expectedReturn),
+                purpose: data.purpose,
+                status: 'PENDING',
+            },
+        });
+    }
+
+    async approveRequest(id: number) {
+        return await this.prisma.borrowRequest.update({
+            where: { id },
+            data: { status: 'APPROVED', approvedAt: new Date() },
+        });
+    }
+
+    async rejectRequest(id: number) {
+        return await this.prisma.borrowRequest.update({
+            where: { id },
+            data: { status: 'REJECTED' },
+        });
+    }
+
+    async returnAsset(id: number) {
+        return await this.prisma.borrowRequest.update({
+            where: { id },
+            data: { status: 'RETURNED', actualReturn: new Date() },
+        });
     }
 }

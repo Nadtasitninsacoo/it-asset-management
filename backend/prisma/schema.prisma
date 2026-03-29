@@ -1,41 +1,36 @@
-// 1. หน่วยสร้างอาวุธ (Generator)
 generator client {
   provider = "prisma-client-js"
 }
 
-// 2. สายไฟเลี้ยงหลัก (Datasource) - ห้ามลืมเด็ดขาด!
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// 3. กองกำลังทหาร (User Model)
 model User {
   id          Int             @id @default(autoincrement())
   username    String          @unique
   password    String
   name        String
   department  String
-  phone       String?         
+  phone       String?
   role        String          @default("USER")
   requests    BorrowRequest[] @relation("UserRequests")
   createdAt   DateTime        @default(now())
 }
 
-// 4. คลังอาวุธ (Asset Model)
 model Asset {
   id           Int             @id @default(autoincrement())
   name         String
   serialNumber String          @unique
   category     String          @default("General")
-  status       String          @default("AVAILABLE") 
+  status       String          @default("AVAILABLE")
   image        String?         @db.Text
   requests     BorrowRequest[]
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 }
 
-// 5. หน่วยบันทึกภารกิจ (BorrowRequest Model)
 model BorrowRequest {
   id             Int       @id @default(autoincrement())
   userId         Int
@@ -44,8 +39,8 @@ model BorrowRequest {
   expectedReturn DateTime
   actualReturn   DateTime?
   purpose        String?   @db.Text
-  status         String    @default("PENDING") 
-  adminId        Int?      
+  status         String    @default("PENDING")
+  adminId        Int?
   adminComment   String?   @db.Text
   approvedAt     DateTime?
   createdAt      DateTime  @default(now())

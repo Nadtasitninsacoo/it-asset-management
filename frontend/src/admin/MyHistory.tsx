@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useCallback } from 'react';
+import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
 import Pagination from '../components/Pagination';
@@ -26,10 +26,7 @@ const ManageRequests = () => {
     const fetchRequests = useCallback(async (page = 1) => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`http://localhost:3000/borrow-requests/all?page=${page}&limit=6`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get(`/borrow-requests/all?page=${page}&limit=6`);
 
             if (response.data?.data) {
                 setRequests(response.data.data);
@@ -47,52 +44,41 @@ const ManageRequests = () => {
         }
     }, []);
 
-    useEffect(() => {
-        fetchRequests(currentPage);
-    }, [currentPage, fetchRequests]);
-
     const handleAction = async (id: number, status: string, assetName: string) => {
         const confirm = await notify.confirm(
-            'COMMAND AUTHORIZATION',
-            `ยืนยันการดำเนินการ ${status} สำหรับ ${assetName}?`
+            'ยืนยันการดำเนินการ',
+            `ยืนยันการเปลี่ยนสถานะเป็น ${status} สำหรับ ${assetName}?`
         );
         if (!confirm) return;
 
         try {
-            const token = localStorage.getItem('access_token');
-            const url = status === 'RETURNED'
-                ? `http://localhost:3000/borrow-requests/${id}/return`
-                : `http://localhost:3000/borrow-requests/${id}`;
+            const endpoint = status === 'RETURNED'
+                ? `/borrow-requests/${id}/return`
+                : `/borrow-requests/${id}`;
 
-            await axios.patch(url,
-                { status },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.patch(endpoint, { status });
 
-            notify.success('UPDATED', `บันทึกสถานะ ${status} เรียบร้อย`);
+            notify.success('สำเร็จ', `บันทึกสถานะ ${status} เรียบร้อย`);
             fetchRequests(currentPage);
         } catch (error: any) {
-            notify.error('DENIED', error.response?.data?.message || 'Forbidden resource');
+            notify.error('ล้มเหลว', error.response?.data?.message || 'ไม่สามารถทำรายการได้');
         }
     };
 
     const handlePermanentDelete = async (id: number, assetName: string) => {
         const confirm = await notify.confirm(
-            '⚠️ WARNING: PERMANENT DESTROY',
-            `ท่านจอมพลยืนยันจะทำลายข้อมูล "${assetName}" ทิ้งถาวรหรือไม่? (ไม่สามารถกู้คืนได้)`
+            '⚠️ คำเตือน: ลบถาวร',
+            `ยืนยันจะลบข้อมูล "${assetName}" ทิ้งถาวรหรือไม่?`
         );
         if (!confirm) return;
 
         try {
-            const token = localStorage.getItem('access_token');
-            await axios.delete(`http://localhost:3000/borrow-requests/${id}/permanent`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/borrow-requests/${id}/permanent`);
 
-            notify.success('DESTROYED', 'ข้อมูลถูกทำลายถาวรเรียบร้อยแล้ว');
+            notify.success('ลบสำเร็จ', 'ข้อมูลถูกทำลายถาวรเรียบร้อยแล้ว');
             fetchRequests(currentPage);
         } catch (error: any) {
-            notify.error('ERROR', error.response?.data?.message || 'การทำลายข้อมูลล้มเหลว');
+            notify.error('ผิดพลาด', error.response?.data?.message || 'การลบข้อมูลล้มเหลว');
         }
     };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,31 +27,32 @@ const AdminDashboard = () => {
     const fetchDashboardData = useCallback(async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('access_token');
-            const headers = { Authorization: `Bearer ${token}` };
+
             const [resAssets, resRequests, resUsers] = await Promise.all([
-                axios.get('http://localhost:3000/assets', { headers }),
-                axios.get('http://localhost:3000/borrow-requests/all', { headers }),
-                axios.get('http://localhost:3000/users', { headers })
+                api.get('/assets'),
+                api.get('/borrow-requests/all'),
+                api.get('/users')
             ]);
-            const assets = Array.isArray(resAssets.data) ? resAssets.data : (resAssets.data?.data || resAssets.data?.assets || []);
-            const requests = Array.isArray(resRequests.data) ? resRequests.data : (resRequests.data?.data || resRequests.data?.borrowRequests || []);
-            const users = Array.isArray(resUsers.data) ? resUsers.data : (resUsers.data?.data || resUsers.data?.users || []);
+
+            const assets = resAssets.data.data || resAssets.data;
+            const requests = resRequests.data.data || resRequests.data;
+            const users = resUsers.data.data || resUsers.data;
+
             const today = new Date().toISOString().split('T')[0];
 
             setStats({
                 totalAssets: assets.length,
-                currentlyOut: assets.filter((a: any) => a.status === 'BORROWED').length,
+                currentlyOut: assets.filter((a: any) => a.status === 'BORROWED' || a.status === 'IN_USE').length,
                 available: assets.filter((a: any) => a.status === 'AVAILABLE').length,
                 pendingRequests: requests.filter((r: any) => r.status === 'PENDING').length,
                 totalUsers: users.length,
                 newUsersToday: users.filter((u: any) => u.createdAt?.includes(today)).length,
-                recentActivities: requests.slice(0, 4)
+                recentActivities: requests.slice(0, 4) // ดึง 4 รายการล่าสุดมาโชว์
             });
         } catch (error) {
             console.error("Fetch error:", error);
         } finally {
-            setLoading(false);
+            setTimeout(() => setLoading(false), 500);
         }
     }, []);
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
 import Pagination from '../components/Pagination';
@@ -16,9 +16,9 @@ type Asset = {
 const getImageUrl = (image?: string) => {
     if (!image || image === 'null') return '/default-image.png';
     if (image.startsWith('http')) return image;
-
     const fileName = image.includes('/') ? image.split('/').pop() : image;
-    return `http://localhost:3000/uploads/${fileName}`;
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
+    return `${baseUrl}/uploads/${fileName}`;
 };
 
 const CATEGORIES = ["Computer", "Tablet", "Network", "Peripheral", "Software", "Other"];
@@ -27,14 +27,13 @@ const ManageAssets = () => {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentAsset, setCurrentAsset] = useState<Asset | null>(null);
-
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [selectedFileName, setSelectedFileName] = useState("");
 
     const fetchAssets = async (page = 1) => {
         try {
-            const response = await axios.get(`http://localhost:3000/assets?page=${page}`);
-
+            const response = await api.get(`/assets?page=${page}`);
             if (response.data && response.data.data) {
                 setAssets(response.data.data);
                 setTotalPages(response.data.meta.lastPage);
@@ -71,10 +70,12 @@ const ManageAssets = () => {
         }
 
         try {
-            const url = currentAsset ? `http://localhost:3000/assets/${currentAsset.id}` : 'http://localhost:3000/assets';
-            const method = currentAsset ? 'patch' : 'post';
-
-            await axios({ method, url, data: sendData, headers: { 'Content-Type': 'multipart/form-data' } });
+            const endpoint = currentAsset ? `/assets/${currentAsset.id}` : '/assets';
+            if (currentAsset) {
+                await api.patch(endpoint, sendData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            } else {
+                await api.post(endpoint, sendData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            }
 
             notify.success('สำเร็จ', 'บันทึกข้อมูลยุทโธปกรณ์แล้ว');
             setIsModalOpen(false);
@@ -88,17 +89,13 @@ const ManageAssets = () => {
         const confirm = await notify.confirm('ยืนยันการทำลาย?', 'ท่านต้องการลบอุปกรณ์ชิ้นนี้ใช่หรือไม่?');
         if (!confirm) return;
         try {
-            await axios.delete(`http://localhost:3000/assets/${id}`);
+            await api.delete(`/assets/${id}`);
             notify.success('ลบสำเร็จ', 'ข้อมูลถูกกำจัดเรียบร้อย');
             fetchAssets(currentPage);
         } catch (error) {
             notify.error('ล้มเหลว', 'เซิร์ฟเวอร์ปฏิเสธการลบข้อมูล');
         }
     };
-
-    const [selectedFileName, setSelectedFileName] = useState(
-        currentAsset?.image ? currentAsset.image.split("/").pop() : ""
-    );
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -113,7 +110,11 @@ const ManageAssets = () => {
                     <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Manage Assets</h3>
                 </div>
                 <button
-                    onClick={() => { setCurrentAsset(null); setIsModalOpen(true); }}
+                    onClick={() => {
+                        setCurrentAsset(null);
+                        setSelectedFileName("");
+                        setIsModalOpen(true);
+                    }}
                     className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold shadow-sm hover:bg-indigo-700 transition-all flex items-center gap-1.5 text-[11px] uppercase tracking-wider"
                 >
                     <Lucide.Plus size={14} strokeWidth={3} />
@@ -132,7 +133,6 @@ const ManageAssets = () => {
                             <th className="p-2 font-semibold text-gray-400 uppercase tracking-wider text-[9px] text-center">ACTION</th>
                         </tr>
                     </thead>
-
                     <tbody className="divide-y divide-gray-50">
                         {assets.map(asset => (
                             <tr key={asset.id} className="hover:bg-gray-50/40 transition">
@@ -148,18 +148,15 @@ const ManageAssets = () => {
                                         />
                                     </div>
                                 </td>
-
                                 <td className="p-2 font-semibold text-gray-700">{asset.name}</td>
-
                                 <td className="p-2">
                                     <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md text-[9px] font-bold uppercase">
                                         {asset.category}
                                     </span>
                                 </td>
-
                                 <td className="p-2">
                                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase
-                        ${asset.status === 'AVAILABLE' ? 'bg-green-100 text-green-600' :
+                                        ${asset.status === 'AVAILABLE' ? 'bg-green-100 text-green-600' :
                                             asset.status === 'REPAIRING' ? 'bg-rose-100 text-rose-600' :
                                                 asset.status === 'BORROWED' ? 'bg-amber-100 text-amber-600' :
                                                     'bg-gray-100 text-gray-500'}`}>
@@ -169,19 +166,17 @@ const ManageAssets = () => {
                                         {asset.status === 'LOST' && 'สูญหาย'}
                                     </span>
                                 </td>
-
                                 <td className="p-2 text-center flex justify-center gap-1">
                                     <button
                                         onClick={() => {
                                             setCurrentAsset(asset);
-                                            setIsModalOpen(true);
                                             setSelectedFileName(asset.image?.split("/").pop() || "");
+                                            setIsModalOpen(true);
                                         }}
                                         className="bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-md text-[9px] font-bold hover:bg-yellow-200 transition"
                                     >
                                         EDIT
                                     </button>
-
                                     <button
                                         onClick={() => handleDelete(asset.id)}
                                         className="bg-red-100 text-red-600 px-2 py-0.5 rounded-md text-[9px] font-bold hover:bg-red-200 transition"
@@ -193,7 +188,6 @@ const ManageAssets = () => {
                         ))}
                     </tbody>
                 </table>
-
                 <div className="p-2">
                     <Pagination
                         currentPage={currentPage}
@@ -206,7 +200,6 @@ const ManageAssets = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-200">
-
                         <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/20">
                             <h3 className="text-lg font-black text-slate-800 tracking-tight">
                                 {currentAsset ? '📝 EDIT ASSET' : '🚀 NEW ASSET'}
@@ -215,7 +208,6 @@ const ManageAssets = () => {
                                 <Lucide.XCircle size={24} />
                             </button>
                         </div>
-
                         <form onSubmit={handleSubmit} className="p-7 space-y-4">
                             <div className="space-y-3">
                                 <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Asset Image</label>
@@ -236,13 +228,11 @@ const ManageAssets = () => {
                                     )}
                                 </div>
                             </div>
-
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Asset Name</label>
                                     <input name="name" defaultValue={currentAsset?.name} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-sm transition-all" required />
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Category</label>
@@ -255,7 +245,6 @@ const ManageAssets = () => {
                                         <input name="serialNumber" defaultValue={currentAsset?.serialNumber} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-sm transition-all" required />
                                     </div>
                                 </div>
-
                                 <div>
                                     <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Current Status</label>
                                     <select name="status" defaultValue={currentAsset?.status || 'AVAILABLE'} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-xs appearance-none">
@@ -266,7 +255,6 @@ const ManageAssets = () => {
                                     </select>
                                 </div>
                             </div>
-
                             <button type="submit" className="w-full py-4 mt-2 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-indigo-600 shadow-lg shadow-slate-200 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
                                 <Lucide.Save size={16} /> บันทึกอุปกรณ์
                             </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
 import Pagination from '../components/Pagination';
@@ -26,14 +26,16 @@ const ManageUsers = () => {
 
     const fetchUsers = async (page = 1) => {
         try {
-            const response = await axios.get(`http://localhost:3000/users?page=${page}`);
-            let sortedData: User[] = [];
+            const response = await api.get(`/users?page=${page}`);
 
-            if (response.data.meta?.page && response.data.meta.page !== currentPage) {
-                setCurrentPage(response.data.meta.page);
-            } else if (Array.isArray(response.data)) {
-                sortedData = response.data;
-                setTotalPages(1);
+            let sortedData: User[] = [];
+            const data = response.data.data || response.data;
+
+            if (Array.isArray(data)) {
+                sortedData = data;
+                if (response.data.meta?.lastPage) {
+                    setTotalPages(response.data.meta.lastPage);
+                }
             }
 
             const prioritizedUsers = [...sortedData].sort((a, b) => {
@@ -43,9 +45,8 @@ const ManageUsers = () => {
             });
 
             setUsers(prioritizedUsers);
-
         } catch (error) {
-            console.error("Fetch and Sort Error:", error);
+            console.error("Fetch Error:", error);
             setUsers([]);
         }
     };
@@ -60,24 +61,25 @@ const ManageUsers = () => {
         const data = Object.fromEntries(formData.entries());
 
         try {
-            const url = currentUser ? `http://localhost:3000/users/${currentUser.id}` : 'http://localhost:3000/users';
-            const method = currentUser ? 'patch' : 'post';
+            if (currentUser) {
+                await api.patch(`/users/${currentUser.id}`, data);
+            } else {
+                await api.post('/users', data);
+            }
 
-            await axios({ method, url, data });
-
-            notify.success('สำเร็จ', 'บันทึกข้อมูลผู้ใช้เรียบร้อยแล้ว');
+            notify.success('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย');
             setIsModalOpen(false);
             fetchUsers(currentPage);
-        } catch (error) {
-            notify.error('ผิดพลาด', 'Username นี้อาจถูกใช้งานไปแล้ว');
+        } catch (error: any) {
+            notify.error('ผิดพลาด', error.response?.data?.message || 'Username นี้อาจถูกใช้งานไปแล้ว');
         }
     };
 
     const handleDelete = async (id: number) => {
-        const confirm = await notify.confirm('กวาดล้างผู้ใช้?', 'ท่านต้องการลบผู้ใช้งานท่านนี้ออกจากระบบใช่หรือไม่?');
+        const confirm = await notify.confirm('กวาดล้างผู้ใช้?', 'ยืนยันการลบออกจากระบบ?');
         if (!confirm) return;
         try {
-            await axios.delete(`http://localhost:3000/users/${id}`);
+            await api.delete(`/users/${id}`);
             notify.success('กำจัดสำเร็จ', 'ลบผู้ใช้งานเรียบร้อย');
             fetchUsers(currentPage);
         } catch (error) {
