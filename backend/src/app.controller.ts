@@ -3,10 +3,11 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getHello() {
+    // คืนค่าเป็น Object ซึ่ง NestJS จะแปลงเป็น JSON ให้เองอัตโนมัติครับ
+    return this.appService.getWelcomeMessage();
   }
 }
