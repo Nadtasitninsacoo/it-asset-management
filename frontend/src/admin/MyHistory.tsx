@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
@@ -28,7 +28,7 @@ const ManageRequests = () => {
             setLoading(true);
             const response = await api.get(`/borrow-requests/all?page=${page}&limit=6`);
 
-            if (response.data?.data) {
+            if (response.data && response.data.data) {
                 setRequests(response.data.data);
                 setTotalPages(response.data.meta?.lastPage || 1);
                 setCurrentPage(page);
@@ -39,10 +39,15 @@ const ManageRequests = () => {
         } catch (error) {
             console.error("Fetch Error", error);
             setRequests([]);
+            notify.error('ผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูล Logs ได้');
         } finally {
-            setTimeout(() => setLoading(false), 500);
+            setTimeout(() => setLoading(false), 300);
         }
     }, []);
+
+    useEffect(() => {
+        fetchRequests(currentPage);
+    }, [currentPage, fetchRequests]);
 
     const handleAction = async (id: number, status: string, assetName: string) => {
         const confirm = await notify.confirm(
@@ -74,7 +79,6 @@ const ManageRequests = () => {
 
         try {
             await api.delete(`/borrow-requests/${id}/permanent`);
-
             notify.success('ลบสำเร็จ', 'ข้อมูลถูกทำลายถาวรเรียบร้อยแล้ว');
             fetchRequests(currentPage);
         } catch (error: any) {
@@ -184,7 +188,6 @@ const ManageRequests = () => {
                                                                     <Lucide.RotateCcw size={12} /> RECV
                                                                 </button>
                                                             )}
-                                                            {req.status === 'RETURNED' && <Lucide.CheckCircle2 size={16} className="text-emerald-500" />}
                                                         </div>
                                                     )}
                                                     {!isAdmin && req.status === 'APPROVED' && (

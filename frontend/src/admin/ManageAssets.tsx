@@ -31,19 +31,26 @@ const ManageAssets = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [selectedFileName, setSelectedFileName] = useState("");
 
-    const fetchAssets = async (page = 1) => {
+    const fetchAssets = async (page: number) => {
         try {
             const response = await api.get(`/assets?page=${page}`);
+
             if (response.data && response.data.data) {
                 setAssets(response.data.data);
-                setTotalPages(response.data.meta.lastPage);
-                setCurrentPage(response.data.meta.page);
-            } else {
-                setAssets(response.data);
+
+                if (response.data.meta) {
+                    setTotalPages(response.data.meta.lastPage || 1);
+                }
             }
         } catch (error) {
             console.error('Fetch Error:', error);
             notify.error('ผิดพลาด', 'ไม่สามารถดึงข้อมูลยุทโธปกรณ์ได้');
+        }
+    };
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
+            setCurrentPage(page);
         }
     };
 
@@ -188,11 +195,11 @@ const ManageAssets = () => {
                         ))}
                     </tbody>
                 </table>
-                <div className="p-2">
+                <div className="p-4 border-t border-gray-50">
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
-                        onPageChange={(page) => setCurrentPage(page)}
+                        onPageChange={handlePageChange}
                     />
                 </div>
             </div>

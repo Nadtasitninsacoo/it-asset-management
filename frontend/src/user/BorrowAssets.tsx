@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import Swal from 'sweetalert2';
 import { Search, Package, ArrowRight, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { notify } from '../utils/swal';
@@ -23,7 +23,7 @@ const BorrowAssets = () => {
     const fetchAssets = async (page = 1) => {
         try {
             setLoading(true);
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/assets?page=${page}`);
+            const response = await api.get(`/assets?page=${page}`);
 
             if (response.data?.data) {
                 setAssets(response.data.data);
@@ -115,23 +115,18 @@ const BorrowAssets = () => {
             try {
                 const userSession = localStorage.getItem('user');
                 const userData = userSession ? JSON.parse(userSession) : null;
-                const token = localStorage.getItem('access_token');
 
-                if (!userData?.id || !token) {
-                    return notify.error('ผิดพลาด', 'ไม่พบข้อมูลผู้ใช้หรือ Token');
+                if (!userData?.id) {
+                    return notify.error('ผิดพลาด', 'ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
                 }
 
                 const isoDate = new Date(result.value.expectedReturn).toISOString();
 
-                await axios.post('http://localhost:3000/borrow-requests', {
+                await api.post('/borrow-requests', {
                     assetId: Number(asset.id),
                     userId: Number(userData.id),
                     purpose: result.value.purpose,
                     expectedReturn: isoDate,
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
                 });
 
                 notify.success('สำเร็จ', 'ส่งคำขอเบิกยืมเรียบร้อยแล้ว');
