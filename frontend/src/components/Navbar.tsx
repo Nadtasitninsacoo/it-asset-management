@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, Package, ClipboardCheck, RefreshCcw, LogOut, Menu, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -7,9 +8,11 @@ type User = {
     role: string;
 };
 
-const Navbar = () => { // ไม่ต้องรับ props แล้ว
+const Navbar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [userData, setUserData] = useState<User | null>(null);
+
+    // โหลด user จาก localStorage
     useEffect(() => {
         const raw = localStorage.getItem('user');
         if (raw) {
@@ -17,7 +20,7 @@ const Navbar = () => { // ไม่ต้องรับ props แล้ว
                 const parsed = JSON.parse(raw) as User;
                 setUserData({
                     ...parsed,
-                    role: parsed.role?.trim().toUpperCase() || 'USER'
+                    role: parsed.role?.trim().toUpperCase() || 'USER',
                 });
             } catch {
                 setUserData({ name: 'Guest', role: 'USER' });
@@ -27,6 +30,7 @@ const Navbar = () => { // ไม่ต้องรับ props แล้ว
         }
     }, []);
 
+    // เมนูหลัก
     const menuItems = [
         { icon: <LayoutDashboard size={18} />, label: 'Dashboard', path: '/admin-dashboard', adminOnly: true },
         { icon: <ClipboardCheck size={18} />, label: 'Requests', path: '/manage-requests', adminOnly: true },
@@ -43,9 +47,10 @@ const Navbar = () => { // ไม่ต้องรับ props แล้ว
 
     return (
         <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100] w-full shadow-sm">
+            {/* Navbar header */}
             <div className="h-16 px-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    {/* ✅ แก้ไขปุ่มให้เปิด Dropdown ในตัว Navbar เองเพื่อคุมสิทธิ์มือถือ */}
+                    {/* ปุ่มเปิด dropdown สำหรับมือถือ */}
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 rounded-xl transition-all"
@@ -55,6 +60,7 @@ const Navbar = () => { // ไม่ต้องรับ props แล้ว
                     <span className="font-black text-slate-800 tracking-tighter uppercase italic">Sentinel</span>
                 </div>
 
+                {/* แสดงชื่อและยศ */}
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
                         <p className="text-sm font-bold text-slate-800 leading-none">{userData.name}</p>
@@ -66,26 +72,27 @@ const Navbar = () => { // ไม่ต้องรับ props แล้ว
                 </div>
             </div>
 
-            {/* ✅ ส่วนควบคุมการกรองสิทธิ์ที่เข้มงวดที่สุด */}
-            <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-50
-                ${isDropdownOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+            {/* Mobile dropdown */}
+            <div
+                className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-50
+                    ${isDropdownOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+            >
                 <div className="p-4 space-y-2">
                     {menuItems
-                        .filter(item => !item.adminOnly || userData.role === 'ADMIN') // 🛡️ กรองทิ้งตั้งแต่ชั้นต้นทาง
+                        .filter(item => !item.adminOnly || userData.role === 'ADMIN') // คุมสิทธิ์ Admin
                         .map((item, idx) => (
                             <NavLink
                                 key={idx}
                                 to={item.path}
                                 onClick={() => setIsDropdownOpen(false)}
-                                className={({ isActive }) => `
-                                    flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-sm transition-all
-                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}
-                                `}
+                                className={({ isActive }) =>
+                                    `flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
+                                    }`
+                                }
                             >
                                 {item.icon} {item.label}
                             </NavLink>
-                        ))
-                    }
+                        ))}
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-4 px-4 py-3 w-full rounded-xl font-bold text-sm text-rose-500 hover:bg-rose-50 transition-colors mt-2 border-t border-slate-50 pt-4"

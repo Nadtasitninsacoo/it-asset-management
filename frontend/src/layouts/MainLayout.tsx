@@ -1,3 +1,4 @@
+// src/layouts/MainLayout.tsx
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -15,58 +16,69 @@ const MainLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isReady, setIsReady] = useState(false);
 
-    useEffect(() => {
-        const loadUser = () => {
-            try {
-                const raw = localStorage.getItem('user');
-                if (raw && raw !== 'undefined' && raw !== 'null') {
-                    const parsed = JSON.parse(raw) as User;
-                    setUserData({
-                        ...parsed,
-                        role: parsed.role?.trim().toUpperCase() || 'USER'
-                    });
-                }
-            } catch (err) {
-                console.error('Security System: Data Corruption Detected');
-                localStorage.removeItem('user');
-                setUserData(null);
-            } finally {
-                setIsReady(true);
+    // โหลดข้อมูล user จาก localStorage
+    const syncUserAuth = () => {
+        try {
+            const raw = localStorage.getItem('user');
+            if (raw && raw !== 'undefined' && raw !== 'null') {
+                const parsed = JSON.parse(raw) as User;
+                setUserData({
+                    ...parsed,
+                    role: parsed.role?.trim().toUpperCase() || 'USER',
+                });
+            } else {
+                setUserData({ name: 'Guest', role: 'USER' });
             }
-        };
+        } catch (err) {
+            localStorage.removeItem('user');
+            setUserData({ name: 'Guest', role: 'USER' });
+        } finally {
+            setIsReady(true);
+        }
+    };
 
-        loadUser();
+    useEffect(() => {
+        syncUserAuth();
+        window.addEventListener('storage', syncUserAuth);
+        return () => window.removeEventListener('storage', syncUserAuth);
     }, []);
 
+    // กำลังโหลด user
     if (!isReady) {
-        return <div className="h-screen w-full bg-[#fcfcfd] flex items-center justify-center font-black text-slate-400">LOADING SENTINEL...</div>;
+        return (
+            <div className="h-screen w-full bg-[#fcfcfd] flex items-center justify-center font-black text-slate-400 animate-pulse">
+                INITIALIZING SENTINEL CORE...
+            </div>
+        );
     }
 
     return (
         <div className="relative flex h-screen w-full bg-[#fcfcfd] overflow-hidden font-sans">
+            {/* Overlay มือถือ */}
             <div
-                className={`fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                 onClick={() => setIsSidebarOpen(false)}
             />
 
-            <div
-                className={`fixed inset-y-0 left-0 z-50 transform bg-white transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
-            >
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-            </div>
+            {/* Sidebar */}
+            <Sidebar
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                userData={userData} // ส่ง userData ให้ Sidebar กรองเมนู
+            />
 
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+                {/* Navbar ใช้ userData จาก localStorage ภายในตัวมันเอง */}
                 <Navbar />
 
-                <main className="flex-1 w-full overflow-y-auto overflow-x-hidden p-4 lg:p-8 flex flex-col">
+                <main className="flex-1 w-full overflow-y-auto p-4 lg:p-8 flex flex-col custom-scrollbar">
                     <section className="flex-1">
-                        <Outlet />
+                        <Outlet context={{ userData }} /> {/* ส่ง Context ให้หน้าลูก */}
                     </section>
 
                     <footer className="mt-10">
-                        {userData && userData.role === 'ADMIN' ? <AdminFooter /> : <Footer />}
+                        {userData?.role === 'ADMIN' ? <AdminFooter /> : <Footer />}
                     </footer>
                 </main>
             </div>
