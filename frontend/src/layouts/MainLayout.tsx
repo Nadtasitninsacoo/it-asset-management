@@ -5,8 +5,21 @@ import AdminFooter from '../components/AdminFooter';
 import { Outlet } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 
+type User = {
+    name: string;
+    role: string;
+};
+
 const MainLayout = () => {
-    const role = useMemo(() => localStorage.getItem('role'), []);
+    const userData = useMemo<User | null>(() => {
+        try {
+            const raw = localStorage.getItem('user');
+            return raw ? (JSON.parse(raw) as User) : null;
+        } catch (error) {
+            console.error('Invalid user data');
+            return null;
+        }
+    }, []);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
@@ -16,7 +29,10 @@ const MainLayout = () => {
             />
 
             <div className={`fixed inset-y-0 left-0 z-50 transform bg-white transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                <Sidebar onClose={() => setIsSidebarOpen(false)} />
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                />
             </div>
 
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
@@ -28,7 +44,7 @@ const MainLayout = () => {
                     </section>
 
                     <footer className="mt-10">
-                        {role === 'ADMIN' ? <AdminFooter /> : <Footer />}
+                        {userData?.role === 'ADMIN' ? <AdminFooter /> : <Footer />}
                     </footer>
                 </main>
             </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
@@ -23,25 +23,32 @@ const ManageRequests = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
 
+    // 🚩 1. สกัดข้อมูล User ป้องกัน Crash และดึงสิทธิ์ Admin
+    const userData = useMemo(() => {
+        const session = localStorage.getItem('user');
+        try {
+            return session ? JSON.parse(session) : {};
+        } catch {
+            return {};
+        }
+    }, []);
+
+    const isAdmin = userData.role === 'ADMIN';
+
+    // 🚩 2. ระบบดึงข้อมูล Intel
     const fetchRequests = useCallback(async (page = 1) => {
         try {
             setLoading(true);
             const response = await api.get(`/borrow-requests/all?page=${page}&limit=6`);
-
-            if (response.data && response.data.data) {
+            if (response.data?.data) {
                 setRequests(response.data.data);
                 setTotalPages(response.data.meta?.lastPage || 1);
                 setCurrentPage(page);
-            } else {
-                setRequests(Array.isArray(response.data) ? response.data : []);
-                setTotalPages(1);
             }
         } catch (error) {
-            console.error("Fetch Error", error);
-            setRequests([]);
-            notify.error('ผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูล Logs ได้');
+            notify.error('ผิดพลาด', 'การเชื่อมต่อฐานข้อมูลล้มเหลว');
         } finally {
-            setTimeout(() => setLoading(false), 300);
+            setLoading(false);
         }
     }, []);
 
@@ -49,181 +56,159 @@ const ManageRequests = () => {
         fetchRequests(currentPage);
     }, [currentPage, fetchRequests]);
 
+    // 🚩 3. กรองรายการที่เหมาะสมกับผู้ใช้ (ย้ายออกจาก JSX เพื่อความคลีน)
+    const visibleRequests = useMemo(() => {
+        return requests.filter(req => isAdmin || req.userId === userData.id);
+    }, [requests, isAdmin, userData.id]);
+
+    // 🚩 4. ยุทธการเปลี่ยนสถานะ
     const handleAction = async (id: number, status: string, assetName: string) => {
-        const confirm = await notify.confirm(
-            'ยืนยันการดำเนินการ',
-            `ยืนยันการเปลี่ยนสถานะเป็น ${status} สำหรับ ${assetName}?`
-        );
+        const confirm = await notify.confirm('ยืนยันยุทธการ', `เปลี่ยนสถานะเป็น ${status} สำหรับ ${assetName}?`);
         if (!confirm) return;
-
         try {
-            const endpoint = status === 'RETURNED'
-                ? `/borrow-requests/${id}/return`
-                : `/borrow-requests/${id}`;
-
+            const endpoint = status === 'RETURNED' ? `/borrow-requests/${id}/return` : `/borrow-requests/${id}`;
             await api.patch(endpoint, { status });
-
-            notify.success('สำเร็จ', `บันทึกสถานะ ${status} เรียบร้อย`);
+            notify.success('สำเร็จ', `อัปเดตสถานะ ${status} เรียบร้อย`);
             fetchRequests(currentPage);
         } catch (error: any) {
-            notify.error('ล้มเหลว', error.response?.data?.message || 'ไม่สามารถทำรายการได้');
+            notify.error('ล้มเหลว', error.response?.data?.message || 'การสื่อสารขัดข้อง');
         }
     };
 
+    // 🚩 5. ยุทธการลบถาวร (แก้เส้นแดงเรียบร้อย)
     const handlePermanentDelete = async (id: number, assetName: string) => {
-        const confirm = await notify.confirm(
-            '⚠️ คำเตือน: ลบถาวร',
-            `ยืนยันจะลบข้อมูล "${assetName}" ทิ้งถาวรหรือไม่?`
-        );
+        const confirm = await notify.confirm('⚠️ ลบถาวร', `ทำลายข้อมูล "${assetName}" ทิ้งถาวรหรือไม่?`);
         if (!confirm) return;
-
         try {
             await api.delete(`/borrow-requests/${id}/permanent`);
-            notify.success('ลบสำเร็จ', 'ข้อมูลถูกทำลายถาวรเรียบร้อยแล้ว');
+            notify.success('สำเร็จ', 'ข้อมูลถูกทำลายสิ้นซาก');
             fetchRequests(currentPage);
         } catch (error: any) {
-            notify.error('ผิดพลาด', error.response?.data?.message || 'การลบข้อมูลล้มเหลว');
+            notify.error('ผิดพลาด', 'ไม่สามารถเข้าถึงคำสั่งทำลายได้');
         }
     };
 
     return (
-        <div className="p-4 md:p-8 lg:p-10 bg-[#fafafa] min-h-screen font-sans text-slate-900 relative">
-            {loading && (
-                <div className="fixed inset-0 bg-white/60 backdrop-blur-[2px] z-[60] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-3">
-                        <div className="w-10 h-10 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                        <span className="text-[10px] font-black text-indigo-600 tracking-[0.3em] uppercase">Syncing...</span>
-                    </div>
-                </div>
-            )}
-
-            <header className="max-w-7xl mx-auto mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="p-4 md:p-8 lg:p-10 bg-[#fafafa] min-h-screen font-sans text-slate-900">
+            <header className="max-w-7xl mx-auto mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black tracking-tighter italic uppercase text-slate-900 leading-none">
-                        <span className="text-gray-400">Surveillance</span> <span>Logs</span>
+                    <h2 className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic">
+                        <span className="text-slate-300">Surveillance</span> <span>Logs</span>
                     </h2>
-                    <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] mt-2 uppercase">Real-time Asset Tracking System</p>
-                </div>
-                <div className="bg-white px-5 py-3 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-6 text-slate-900 text-center self-start sm:self-center">
-                    <div className="border-r border-slate-100 pr-6">
-                        <div className="text-xl font-black text-amber-500">{requests.filter(r => r.status === 'PENDING').length}</div>
-                        <div className="text-[8px] font-black text-slate-400 uppercase">Pending</div>
-                    </div>
-                    <div>
-                        <div className="text-xl font-black text-indigo-500">{requests.filter(r => r.status === 'APPROVED').length}</div>
-                        <div className="text-[8px] font-black text-slate-400 uppercase">Deployed</div>
-                    </div>
+                    <p className="text-xs font-bold text-indigo-500 tracking-widest mt-2 uppercase">Personnel Activity Intel</p>
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden min-h-[400px]">
-                {/* 🚩 ฐานทัพลับ: ระบบเลื่อนตารางแนวนอน */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-xs min-w-[850px]">
-                        <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400">
-                                <th className="p-5 text-left text-[9px] font-bold uppercase tracking-widest">Personnel</th>
-                                <th className="p-5 text-left text-[9px] font-bold uppercase tracking-widest">Asset</th>
-                                <th className="p-5 text-center text-[9px] font-bold uppercase tracking-widest">Timeline</th>
-                                <th className="p-5 text-center text-[9px] font-bold uppercase tracking-widest">Status</th>
-                                <th className="p-5 text-center text-[9px] font-bold uppercase tracking-widest">Cmd</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50 text-slate-900">
-                            {(() => {
-                                const userSession = localStorage.getItem('user');
-                                const userData = userSession ? JSON.parse(userSession) : {};
-                                const isAdmin = userData.role === 'ADMIN';
-                                const visibleRequests = requests.filter(req => isAdmin || req.userId === userData.id);
-
-                                if (visibleRequests.length > 0) {
-                                    return visibleRequests.map((req) => (
-                                        <tr key={req.id} className="hover:bg-slate-50/30 transition group text-slate-900">
-                                            <td className="p-5">
-                                                <div className="font-bold text-[11px] uppercase">{req.user?.name || 'Unknown'}</div>
-                                                <div className="text-[9px] text-slate-400 font-medium uppercase">{req.user?.department || 'Sector N/A'}</div>
-                                            </td>
-                                            <td className="p-5">
-                                                <div className="font-bold text-indigo-600 text-[11px] uppercase">{req.asset?.name}</div>
-                                                <div className="text-[9px] font-mono text-slate-400 font-bold tracking-tight uppercase">SN: {req.asset?.serialNumber}</div>
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <div className="text-[10px] font-bold text-slate-600">{new Date(req.createdAt).toLocaleDateString()}</div>
-                                                <Lucide.ArrowDown size={10} className="mx-auto my-0.5 text-slate-300" />
-                                                <div className="text-[10px] font-bold text-rose-500">{new Date(req.expectedReturn).toLocaleDateString()}</div>
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border ${req.status === 'APPROVED' ? 'bg-indigo-50 text-indigo-600 border-indigo-100 animate-pulse' :
-                                                        req.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                            req.status === 'RETURNED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                                req.status === 'REJECTED' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                                                    req.status === 'DELETE' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-slate-50 text-slate-400'
-                                                    }`}>
-                                                    {req.status === 'APPROVED' ? 'กำลังยืมใช้งาน' :
-                                                        req.status === 'PENDING' ? 'รอการอนุมัติ' :
-                                                            req.status === 'RETURNED' ? 'คืนสำเร็จแล้ว' :
-                                                                req.status === 'REJECTED' ? 'ปฏิเสธคำขอ' : req.status}
-                                                </span>
-                                            </td>
-                                            <td className="p-5">
-                                                <div className="flex justify-center items-center gap-2">
-                                                    {isAdmin && (
-                                                        <div className="flex items-center gap-2">
-                                                            {req.status === 'DELETE' ? (
-                                                                <button onClick={() => handlePermanentDelete(req.id, req.asset.name)} className="px-3 py-1.5 bg-rose-600 text-white rounded-xl font-bold text-[9px] uppercase hover:bg-rose-800 transition shadow-lg flex items-center gap-1.5 animate-bounce">
-                                                                    <Lucide.Skull size={12} /> ลบถาวร
-                                                                </button>
-                                                            ) : (
-                                                                <button onClick={() => handleAction(req.id, 'DELETE', req.asset.name)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors" title="ย้ายไปสถานะลบ">
-                                                                    <Lucide.Trash2 size={16} />
-                                                                </button>
-                                                            )}
-                                                            {req.status === 'PENDING' && (
-                                                                <div className="flex gap-2">
-                                                                    <button onClick={() => handleAction(req.id, 'APPROVED', req.asset.name)} className="px-4 py-1.5 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase hover:bg-indigo-600 transition shadow-md flex items-center gap-1.5">
-                                                                        <Lucide.ShieldCheck size={12} /> อนุมัติยืม
-                                                                    </button>
-                                                                    <button onClick={() => handleAction(req.id, 'REJECTED', req.asset.name)} className="px-4 py-1.5 bg-white text-rose-500 border border-rose-100 rounded-xl font-black text-[9px] uppercase hover:bg-rose-50 transition flex items-center gap-1.5">
-                                                                        <Lucide.ShieldX size={12} /> ปฏิเสธ
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                    {req.status === 'APPROVED' && (
-                                                        <button onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)} className="px-5 py-2 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase hover:bg-emerald-600 shadow-lg shadow-emerald-100 flex items-center gap-2 active:scale-95 transition-all">
-                                                            <Lucide.RotateCcw size={13} /> รับคืนอุปกรณ์
-                                                        </button>
-                                                    )}
-                                                    {req.status === 'RETURNED' && (
-                                                        <div className="flex items-center gap-1.5 text-emerald-600 font-black text-[9px] uppercase bg-emerald-50 px-4 py-1.5 rounded-xl border border-emerald-100">
-                                                            <Lucide.CheckCircle2 size={14} /> ทำรายการสำเร็จ
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ));
-                                } else {
-                                    return !loading && (
-                                        <tr>
-                                            <td colSpan={5} className="p-24 text-center">
-                                                <Lucide.DatabaseZap size={40} className="mx-auto text-slate-200 mb-3" />
-                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">ไม่พบประวัติการทำรายการ</p>
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-                            })()}
-                        </tbody>
-                    </table>
+            <div className="max-w-7xl mx-auto">
+                {/* 💻 Desktop View (Table) - ซ่อนในมือถือ */}
+                <div className="hidden md:block bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left min-w-[900px]">
+                            <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] font-black text-slate-400 tracking-widest">
+                                <tr>
+                                    <th className="p-6">Personnel</th>
+                                    <th className="p-6">Asset Intelligence</th>
+                                    <th className="p-6 text-center">Timeline</th>
+                                    <th className="p-6 text-center">Status</th>
+                                    <th className="p-6 text-center">Command</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {visibleRequests.map((req) => (
+                                    <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="p-6">
+                                            <div className="font-black text-xs uppercase text-slate-800">{req.user?.name}</div>
+                                            <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">{req.user?.department}</div>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="font-black text-xs text-slate-700 uppercase">{req.asset?.name}</div>
+                                            <div className="text-[10px] font-bold text-slate-400">SN: {req.asset?.serialNumber}</div>
+                                        </td>
+                                        <td className="p-6 text-center text-xs font-bold text-slate-500 italic">
+                                            {new Date(req.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${req.status === 'APPROVED' ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                {req.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <div className="flex justify-center gap-2">
+                                                {isAdmin && (
+                                                    <>
+                                                        {req.status === 'PENDING' ? (
+                                                            <div className="flex gap-2">
+                                                                <button onClick={() => handleAction(req.id, 'APPROVED', req.asset.name)} className="p-2 bg-slate-900 text-white rounded-xl hover:bg-indigo-600"><Lucide.Check size={16} /></button>
+                                                                <button onClick={() => handleAction(req.id, 'REJECTED', req.asset.name)} className="p-2 bg-white border border-rose-100 text-rose-500 rounded-xl hover:bg-rose-50"><Lucide.X size={16} /></button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => handlePermanentDelete(req.id, req.asset.name)} className="p-2 text-slate-300 hover:text-rose-500"><Lucide.Trash2 size={16} /></button>
+                                                        )}
+                                                    </>
+                                                )}
+                                                {req.status === 'APPROVED' && (
+                                                    <button onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)} className="px-4 py-2 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase">Finalize</button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div className="p-6 bg-slate-50/50 border-t border-slate-100">
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(p) => fetchRequests(p)}
-                    />
+
+                {/* 📱 Mobile View (Cards) - แสดงเฉพาะมือถือ */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {visibleRequests.map((req) => (
+                        <div key={req.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-black">
+                                    {req.user?.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${req.status === 'APPROVED' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                    {req.status}
+                                </span>
+                            </div>
+                            <h4 className="font-black text-slate-800 text-sm uppercase leading-tight mb-1">{req.asset?.name}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 mb-4 uppercase">SN: {req.asset?.serialNumber}</p>
+
+                            <div className="flex items-center gap-2 mb-6">
+                                <Lucide.User size={12} className="text-indigo-400" />
+                                <span className="text-xs font-bold text-slate-600">{req.user?.name}</span>
+                            </div>
+
+                            <div className="flex gap-2 border-t border-slate-50 pt-4">
+                                {isAdmin && req.status === 'PENDING' ? (
+                                    <>
+                                        <button onClick={() => handleAction(req.id, 'APPROVED', req.asset.name)} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase">Approve</button>
+                                        <button onClick={() => handleAction(req.id, 'REJECTED', req.asset.name)} className="flex-1 py-3 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase">Deny</button>
+                                    </>
+                                ) : req.status === 'APPROVED' ? (
+                                    <button onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)} className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-xs uppercase shadow-lg shadow-emerald-100">Finalize Return</button>
+                                ) : (
+                                    <div className="flex-1 flex gap-2">
+                                        <div className="flex-1 py-3 bg-slate-50 text-slate-300 rounded-xl text-center text-[10px] font-bold uppercase italic border border-slate-100">Log Finalized</div>
+                                        {isAdmin && (
+                                            <button onClick={() => handlePermanentDelete(req.id, req.asset.name)} className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center border border-rose-100"><Lucide.Trash2 size={18} /></button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 🚩 6. Empty State */}
+                {!loading && visibleRequests.length === 0 && (
+                    <div className="bg-white rounded-[2.5rem] py-20 border border-dashed border-slate-200 flex flex-col items-center">
+                        <Lucide.DatabaseZap size={48} className="text-slate-100 mb-4" />
+                        <p className="text-xs font-black text-slate-300 uppercase tracking-widest">Intelligence Data Empty</p>
+                    </div>
+                )}
+
+                <div className="mt-10">
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={fetchRequests} />
                 </div>
             </div>
         </div>
