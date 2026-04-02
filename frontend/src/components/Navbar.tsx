@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ClipboardCheck, RefreshCcw, Menu, X, LogOut, Settings, Users } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard, ClipboardCheck, Users, Package, } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { notify } from '../utils/swal';
 
@@ -34,42 +34,55 @@ const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
         <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100] w-full shadow-sm">
             <div className="h-16 px-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    {/* ปุ่ม Hamburger สำหรับเปิด Sidebar จริงๆ (ถ้า MainLayout ตั้งไว้) */}
-                    <button onClick={onMenuClick} className="lg:hidden p-2 text-slate-600">
-                        <Menu size={24} />
+                    {/* 🚩 ปุ่ม 3 ขีด: ทำหน้าที่เปิดทั้ง Sidebar และ Dropdown บนมือถือ */}
+                    <button
+                        onClick={() => {
+                            setIsDropdownOpen(!isDropdownOpen);
+                            if (onMenuClick) onMenuClick();
+                        }}
+                        className="lg:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                    >
+                        {isDropdownOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
-                    <span className="font-black text-slate-800 tracking-tighter uppercase italic">Sentinel</span>
+                    <span className="font-black text-slate-800 tracking-tighter uppercase italic text-xl">SENTINEL</span>
                 </div>
 
+                {/* ข้อมูลผู้ใช้ฝั่งขวา */}
                 <div className="flex items-center gap-3">
-                    {/* ปุ่มแสดง Dropdown เมนูบนมือถือ */}
-                    <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="lg:hidden p-2 text-indigo-600">
-                        {isDropdownOpen ? <X size={24} /> : <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center"><Users size={18} /></div>}
-                    </button>
-
                     <div className="text-right hidden sm:block">
                         <p className="text-sm font-bold text-slate-800 leading-none">{userData.name}</p>
                         <p className="text-[10px] text-indigo-600 font-black uppercase mt-1 tracking-wider">{userData.role}</p>
                     </div>
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black shadow-lg shadow-indigo-100">
+                        {userData.name.charAt(0).toUpperCase()}
+                    </div>
                 </div>
             </div>
 
-            {/* Mobile Dropdown Menu */}
+            {/* 🚩 Mobile Dropdown (รวมปุ่มตามบัญชาท่านจอมพล) */}
             <div className={`lg:hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-50 overflow-hidden ${isDropdownOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="p-4 space-y-1">
                     {isAdmin && (
                         <>
-                            <NavLink to="/admin-dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50"><LayoutDashboard size={18} /> Dashboard</NavLink>
-                            <NavLink to="/manage-requests" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50"><ClipboardCheck size={18} /> Manage Requests</NavLink>
-                            {/* 🛡️ ติดตั้งปุ่มที่หายไปในมือถือเรียบร้อย! */}
-                            <NavLink to="/manage-assets" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50"><Settings size={18} /> Assets Control</NavLink>
-                            <NavLink to="/manage-users" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50"><Users size={18} /> Personnel</NavLink>
+                            <NavLink to="/admin-dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                <LayoutDashboard size={18} /> Dashboard
+                            </NavLink>
+                            <NavLink to="/manage-requests" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                <ClipboardCheck size={18} /> Manage Requests
+                            </NavLink>
+                            {/* ⚔️ ปุ่มจัดการระบบ (Personnel & Assets) รวมไว้ที่นี่ */}
+                            <NavLink to="/manage-users" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-indigo-600 bg-indigo-50 font-black hover:bg-indigo-100 transition-all">
+                                <Users size={18} /> Personnel Control
+                            </NavLink>
                         </>
                     )}
-                    <NavLink to="/borrow-assets" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50"><Package size={18} /> Borrow Asset</NavLink>
-                    <NavLink to="/my-history" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50"><RefreshCcw size={18} /> History</NavLink>
+                    <div className="border-t border-slate-50 my-2 pt-2">
+                        <NavLink to="/borrow-assets" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50">
+                            <Package size={18} /> Borrow Asset
+                        </NavLink>
+                    </div>
 
-                    <button onClick={handleLogout} className="flex items-center gap-4 px-4 py-3 w-full rounded-xl font-bold text-rose-500 border-t mt-2 pt-4">
+                    <button onClick={handleLogout} className="flex items-center gap-4 px-4 py-3 w-full rounded-xl font-bold text-rose-500 border-t mt-2 pt-4 hover:bg-rose-50">
                         <LogOut size={18} /> Sign Out
                     </button>
                 </div>

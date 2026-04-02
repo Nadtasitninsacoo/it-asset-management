@@ -16,7 +16,7 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
 
     const menuItems = [
         { icon: <Lucide.LayoutDashboard size={18} />, label: 'Dashboard', path: '/admin-dashboard', show: isAdmin },
-        { icon: <Lucide.ClipboardCheck size={18} />, label: 'Manage Requests', path: '/manage-requests', show: isAdmin },
+        { icon: <Lucide.ClipboardCheck size={18} />, Bird: 'Manage Requests', path: '/manage-requests', show: isAdmin },
         { icon: <Lucide.Settings size={18} />, label: 'Assets Control', path: '/manage-assets', show: isAdmin },
         { icon: <Lucide.Users size={18} />, label: 'Personnel', path: '/manage-users', show: isAdmin },
         { icon: <Lucide.Package size={18} />, label: 'Borrow Asset', path: '/borrow-assets', show: true },
@@ -54,7 +54,7 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
                         onClick={() => onClose?.()}
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-bold text-sm
-                            ${isActive ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
+                            ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
                         }
                     >
                         {item.icon} <span className="uppercase tracking-tight">{item.label}</span>
@@ -63,7 +63,8 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
             </nav>
 
             <div className="mt-auto pt-6 border-t border-slate-50">
-                <button onClick={handleLogout} className="...">
+                <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all group">
+                    {/* 🚩 แก้ตัวแดงด้วยการเติม Lucide. เข้าหน้า LogOut */}
                     <Lucide.LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
                     <span className="text-xs font-black uppercase italic">Sign Out</span>
                 </button>
