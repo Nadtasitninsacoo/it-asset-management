@@ -67,7 +67,6 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
                 flex flex-col px-5 py-8 border-r border-slate-100
             `}
         >
-            {/* ปุ่มปิด (Mobile) */}
             <button
                 onClick={() => onClose?.()}
                 className="lg:hidden absolute top-4 right-4 text-slate-400 hover:text-rose-500"
@@ -75,18 +74,16 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
                 <Lucide.XCircle size={22} />
             </button>
 
-            {/* Logo */}
             <div className="mb-12 flex items-center gap-3.5 px-3">
                 <div className="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center">
                     <Lucide.Cpu className="text-white" size={20} />
                 </div>
                 <div>
-                    <span className="text-lg font-black text-slate-800">SENTINEL</span>
-                    <div className="text-[10px] text-slate-400">CORE SYSTEM</div>
+                    <span className="text-lg font-black text-slate-800 uppercase">SENTINEL</span>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-widest">CORE SYSTEM</div>
                 </div>
             </div>
 
-            {/* Menu */}
             <nav className="flex-1 space-y-1.5 overflow-y-auto">
                 {menuItems.filter(item => item.show).map((item, index) => (
                     <NavLink
@@ -94,24 +91,25 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
                         to={item.path}
                         onClick={() => onClose?.()}
                         className={({ isActive }) => `
-                            flex items-center gap-3 px-4 py-3 rounded-xl
-                            ${isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}
+                            flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                            ${isActive
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                : 'text-slate-500 hover:bg-slate-100'}
                         `}
                     >
                         {item.icon}
-                        <span className="text-sm font-semibold">{item.label}</span>
+                        <span className="text-sm font-bold">{item.label}</span>
                     </NavLink>
                 ))}
             </nav>
 
-            {/* Footer */}
-            <div className="mt-auto pt-6 border-t">
+            <div className="mt-auto pt-6 border-t border-slate-50">
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 w-full text-slate-500 hover:text-rose-500 hover:bg-rose-50 rounded-xl"
+                    className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-200"
                 >
                     <Lucide.LogOut size={18} />
-                    <span>Sign Out</span>
+                    <span className="text-sm font-bold italic uppercase">Sign Out</span>
                 </button>
             </div>
         </aside>
