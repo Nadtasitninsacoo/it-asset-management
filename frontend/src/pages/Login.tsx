@@ -8,7 +8,7 @@ import { notify } from '../utils/swal';
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); // 🚩 ป้องกันการกดซ้ำ
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -18,13 +18,9 @@ const Login = () => {
         try {
             setIsSubmitting(true);
 
-            // 🚩 ตรวจสอบว่า NestJS ของท่านรอรับที่ /auth/login หรือไม่
-            const response = await api.post('/auth/login', {
-                username,
-                password
-            });
+            // เรียก API Login
+            const response = await api.post('/auth/login', { username, password });
 
-            // ✅ ตรวจสอบโครงสร้าง Response ให้ชัวร์
             const payload = response.data?.data || response.data;
             const { access_token, user } = payload;
 
@@ -32,24 +28,23 @@ const Login = () => {
                 throw new Error('Incomplete Credentials: Missing Access Token');
             }
 
+            // เก็บ token + user + role ใน localStorage
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('user', JSON.stringify(user));
-            localStorage.setItem('role', user.role);
+            localStorage.setItem('role', user.role?.trim().toUpperCase() || 'USER');
 
             notify.success('เข้าสู่ระบบสำเร็จ', `สวัสดีครับคุณ ${user.name}`);
 
+            // Redirect ตาม role
             setTimeout(() => {
-                if (user.role === 'ADMIN') {
-                    navigate('/admin-dashboard');
-                } else {
-                    navigate('/borrow-assets');
-                }
+                const role = user.role?.trim().toUpperCase();
+                if (role === 'ADMIN') navigate('/admin-dashboard');
+                else navigate('/borrow-assets');
             }, 800);
 
         } catch (error: any) {
             console.error('Login Error Status:', error.response?.status);
 
-            // 🚩 ถ้า error.response ไม่มีค่า แปลว่าติดต่อ Server ไม่ได้เลย (Server ดับ/URL ผิด)
             if (!error.response) {
                 notify.error('การสื่อสารขัดข้อง', 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ (Network Error)');
             } else {
@@ -119,7 +114,7 @@ const Login = () => {
                             type="submit"
                             disabled={isSubmitting}
                             className={`w-full py-4 text-white text-sm font-black rounded-2xl transition-all duration-300 shadow-xl flex items-center justify-center gap-3 group
-                                ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-blue-600 shadow-blue-100 active:scale-[0.98]'}`}
+                ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-blue-600 shadow-blue-100 active:scale-[0.98]'}`}
                         >
                             {isSubmitting ? 'Verifying...' : 'Authorize Sign In'}
                             {!isSubmitting && <Lucide.ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}

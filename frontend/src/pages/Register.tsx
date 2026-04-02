@@ -6,7 +6,7 @@ import { notify } from '../utils/swal';
 
 const Register = () => {
     const navigate = useNavigate();
-    const [isSubmitting, setIsSubmitting] = useState(false); // 🚩 ป้องกันกดซ้ำ
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -17,10 +17,7 @@ const Register = () => {
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -30,31 +27,33 @@ const Register = () => {
         try {
             setIsSubmitting(true);
 
-            // 🚩 ยิงข้อมูลไปยัง NestJS Endpoint
+            // เรียก API ผ่าน environment variable
             const response = await api.post('/auth/register', formData);
 
-            // ✅ ตรวจสอบโครงสร้างข้อมูลที่ส่งกลับมา
             const resData = response.data?.data || response.data;
 
-            if (resData.access_token) {
+            if (resData.access_token && resData.user) {
                 localStorage.setItem('access_token', resData.access_token);
                 localStorage.setItem('user', JSON.stringify(resData.user));
-                localStorage.setItem('role', resData.user.role);
+                localStorage.setItem('role', resData.user.role?.trim().toUpperCase() || 'USER');
+
+                notify.success(
+                    'ลงทะเบียนสำเร็จ',
+                    `ยินดีต้อนรับคุณ ${resData.user.name} เข้าสู่ค่าย Sentinel ครับ`
+                );
+
+                // Redirect ไปหน้าหลักหลังสมัครสำเร็จ
+                setTimeout(() => {
+                    navigate('/borrow-assets');
+                }, 1200);
+            } else {
+                navigate('/login');
             }
-
-            notify.success('ลงทะเบียนสำเร็จ', `ยินดีต้อนรับคุณ ${formData.name} เข้าสู่ค่าย Sentinel ครับ`);
-
-            setTimeout(() => {
-                // 🚩 ถ้ายืนยันตัวตนสำเร็จให้ไปหน้ายืมพัสดุ ถ้าไม่มี token ให้ไป login
-                navigate(resData.access_token ? '/borrow-assets' : '/login');
-            }, 1500);
-
         } catch (error: any) {
-            console.error('Register Strategic Error:', error);
+            console.error('Register Error:', error);
 
             if (!error.response) {
-                // 🚩 กรณีติดต่อไม่ได้เลย (Server ดับ/URL ผิด/เน็ตหลุด)
-                notify.error('การสื่อสารล้มเหลว', 'ไม่สามารถติดต่อศูนย์บัญชาการได้ (Network Error)');
+                notify.error('การสื่อสารล้มเหลว', 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ (Network Error)');
             } else {
                 const status = error.response.status;
                 const msg = error.response.data?.message;
@@ -79,8 +78,12 @@ const Register = () => {
                     <div className="mx-auto w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-700 rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl shadow-blue-100 rotate-6 hover:rotate-0 transition-transform duration-500">
                         <Lucide.UserPlus className="text-white" size={32} />
                     </div>
-                    <h3 className="text-3xl font-black tracking-tight text-gray-900 mb-2 italic uppercase">Create Account</h3>
-                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em]">Sentinel Core Personnel Only</p>
+                    <h3 className="text-3xl font-black tracking-tight text-gray-900 mb-2 italic uppercase">
+                        Create Account
+                    </h3>
+                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.3em]">
+                        Sentinel Core Personnel Only
+                    </p>
                 </header>
 
                 <form onSubmit={handleSubmit} className="px-10 pb-12 space-y-5">
@@ -149,7 +152,7 @@ const Register = () => {
                         type="submit"
                         disabled={isSubmitting}
                         className={`w-full py-4 text-white text-sm font-black rounded-2xl transition-all duration-300 shadow-xl flex items-center justify-center gap-3 group
-                            ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-blue-600 shadow-blue-100 active:scale-[0.98]'}`}
+              ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-blue-600 shadow-blue-100 active:scale-[0.98]'}`}
                     >
                         {isSubmitting ? 'Processing...' : 'Deploy Personal Data'}
                         {!isSubmitting && <Lucide.ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}

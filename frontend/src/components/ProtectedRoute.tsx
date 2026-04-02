@@ -1,3 +1,4 @@
+// src/components/ProtectedRoute.tsx
 import { Navigate, Outlet } from 'react-router-dom';
 
 interface ProtectedRouteProps {
@@ -6,14 +7,19 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ roleRequired }: ProtectedRouteProps) => {
     const token = localStorage.getItem('access_token');
-    const userRole = localStorage.getItem('role');
-
     if (!token) {
         return <Navigate to="/login" replace />;
     }
 
+    const userRoleRaw = localStorage.getItem('role');
+    const userRole = userRoleRaw ? userRoleRaw.toString().trim().toUpperCase() : 'USER';
+
     if (roleRequired && userRole !== roleRequired) {
-        return <Navigate to="/borrow-assets" replace />;
+        if (userRole === 'ADMIN') {
+            return <Navigate to="/admin-dashboard" replace />;
+        } else {
+            return <Navigate to="/borrow-assets" replace />;
+        }
     }
 
     return <Outlet />;
