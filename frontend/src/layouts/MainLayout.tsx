@@ -13,31 +13,43 @@ type User = {
 const MainLayout = () => {
     const [userData, setUserData] = useState<User | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isReady, setIsReady] = useState(false);
 
-    // อ่าน user จาก localStorage เมื่อ component mount
     useEffect(() => {
-        const raw = localStorage.getItem('user');
-        if (raw) {
+        const loadUser = () => {
             try {
-                const parsed = JSON.parse(raw) as User;
-                setUserData(parsed);
+                const raw = localStorage.getItem('user');
+                if (raw && raw !== 'undefined' && raw !== 'null') {
+                    const parsed = JSON.parse(raw) as User;
+                    setUserData({
+                        ...parsed,
+                        role: parsed.role?.trim().toUpperCase() || 'USER'
+                    });
+                }
             } catch (err) {
-                console.error('Invalid user data');
+                console.error('Security System: Data Corruption Detected');
+                localStorage.removeItem('user');
                 setUserData(null);
+            } finally {
+                setIsReady(true);
             }
-        }
+        };
+
+        loadUser();
     }, []);
+
+    if (!isReady) {
+        return <div className="h-screen w-full bg-[#fcfcfd] flex items-center justify-center font-black text-slate-400">LOADING SENTINEL...</div>;
+    }
 
     return (
         <div className="relative flex h-screen w-full bg-[#fcfcfd] overflow-hidden font-sans">
-            {/* Overlay */}
             <div
                 className={`fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                 onClick={() => setIsSidebarOpen(false)}
             />
 
-            {/* Sidebar */}
             <div
                 className={`fixed inset-y-0 left-0 z-50 transform bg-white transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
@@ -45,7 +57,6 @@ const MainLayout = () => {
                 <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             </div>
 
-            {/* Main content */}
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
@@ -55,7 +66,7 @@ const MainLayout = () => {
                     </section>
 
                     <footer className="mt-10">
-                        {userData?.role === 'ADMIN' ? <AdminFooter /> : <Footer />}
+                        {userData && userData.role === 'ADMIN' ? <AdminFooter /> : <Footer />}
                     </footer>
                 </main>
             </div>
