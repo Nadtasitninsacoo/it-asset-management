@@ -18,7 +18,6 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
         // ✅ แก้ Logic: show เมื่อเป็น ADMIN (===)
         { icon: <Lucide.LayoutDashboard size={18} />, label: 'Dashboard', path: '/admin-dashboard', show: isAdmin },
         { icon: <Lucide.ClipboardCheck size={18} />, label: 'Manage Requests', path: '/manage-requests', show: isAdmin },
-        { icon: <Lucide.Settings size={18} />, label: 'Assets Control', path: '/manage-assets', show: isAdmin },
         { icon: <Lucide.Users size={18} />, label: 'Personnel', path: '/manage-users', show: isAdmin },
         { icon: <Lucide.Package size={18} />, label: 'Borrow Asset', path: '/borrow-assets', show: true },
         { icon: <Lucide.History size={18} />, label: 'Borrow History', path: '/my-history', show: true },
