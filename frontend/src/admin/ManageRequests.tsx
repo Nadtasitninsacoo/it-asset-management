@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import api from '../utils/api';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
@@ -86,7 +86,7 @@ const ManageRequests = () => {
     };
 
     return (
-        <div className="p-6 lg:p-10 bg-[#fafafa] min-h-screen font-sans text-slate-900 relative">
+        <div className="p-4 md:p-10 bg-[#fafafa] min-h-screen font-sans text-slate-900 relative">
             {loading && (
                 <div className="fixed inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
@@ -96,36 +96,37 @@ const ManageRequests = () => {
                 </div>
             )}
 
-            <header className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <header className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-4xl font-black tracking-tighter italic uppercase text-slate-900">
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tighter italic uppercase text-slate-900">
                         <span className="text-gray-400">Surveillance</span> <span>Logs</span>
                     </h2>
                     <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] mt-1 uppercase">Real-time Asset Tracking</p>
                 </div>
 
-                <div className="flex gap-4">
-                    <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm text-center">
-                        <div className="text-xl font-black text-amber-500">{requests.filter(r => r.status === 'PENDING').length}</div>
+                <div className="flex gap-4 self-end md:self-center">
+                    <div className="bg-white px-4 md:px-6 py-2 md:py-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                        <div className="text-lg md:text-xl font-black text-amber-500">{requests.filter(r => r.status === 'PENDING').length}</div>
                         <div className="text-[8px] font-black text-slate-400 uppercase">Pending</div>
                     </div>
-                    <div className="bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm text-center">
-                        <div className="text-xl font-black text-indigo-500">{requests.filter(r => r.status === 'APPROVED').length}</div>
+                    <div className="bg-white px-4 md:px-6 py-2 md:py-3 rounded-2xl border border-slate-100 shadow-sm text-center">
+                        <div className="text-lg md:text-xl font-black text-indigo-500">{requests.filter(r => r.status === 'APPROVED').length}</div>
                         <div className="text-[8px] font-black text-slate-400 uppercase">Deployed</div>
                     </div>
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden min-h-[400px]">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
+            <div className="max-w-7xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
+                {/* 🚩 ระบบเลื่อนตารางแนวนอนสำหรับมือถือ */}
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-xs min-w-[800px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400">
-                                <th className="p-4 text-left text-[9px] font-bold uppercase">Personnel</th>
-                                <th className="p-4 text-left text-[9px] font-bold uppercase">Asset</th>
-                                <th className="p-4 text-center text-[9px] font-bold uppercase">Timeline</th>
-                                <th className="p-4 text-center text-[9px] font-bold uppercase">Status</th>
-                                <th className="p-4 text-center text-[9px] font-bold uppercase">Command</th>
+                                <th className="p-5 text-left text-[9px] font-bold uppercase tracking-wider">Personnel</th>
+                                <th className="p-5 text-left text-[9px] font-bold uppercase tracking-wider">Asset</th>
+                                <th className="p-5 text-center text-[9px] font-bold uppercase tracking-wider">Timeline</th>
+                                <th className="p-5 text-center text-[9px] font-bold uppercase tracking-wider">Status</th>
+                                <th className="p-5 text-center text-[9px] font-bold uppercase tracking-wider">Command</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -138,29 +139,22 @@ const ManageRequests = () => {
                                 if (visibleRequests.length > 0) {
                                     return visibleRequests.map((req) => (
                                         <tr key={req.id} className="hover:bg-slate-50/30 transition-colors group">
-                                            {/* 👤 ข้อมูลผู้ยืม */}
-                                            <td className="p-4">
+                                            <td className="p-5">
                                                 <div className="font-bold text-[11px] uppercase text-slate-700">{req.user?.name || 'ไม่ระบุชื่อ'}</div>
                                                 <div className="text-[9px] text-slate-400 font-medium uppercase">{req.user?.department || 'ฝ่ายทั่วไป'}</div>
                                             </td>
-
-                                            {/* 📦 ข้อมูลอุปกรณ์ */}
-                                            <td className="p-4">
+                                            <td className="p-5">
                                                 <div className="font-bold text-indigo-600 text-[11px] uppercase">{req.asset?.name}</div>
-                                                <div className="text-[9px] font-mono text-slate-400 tracking-tighter">SN: {req.asset?.serialNumber}</div>
+                                                <div className="text-[9px] font-mono text-slate-400 tracking-tighter uppercase">SN: {req.asset?.serialNumber}</div>
                                             </td>
-
-                                            {/* 📅 ช่วงเวลา */}
-                                            <td className="p-4 text-center">
+                                            <td className="p-5 text-center">
                                                 <div className="text-[10px] font-bold text-slate-600">{new Date(req.createdAt).toLocaleDateString()}</div>
                                                 <Lucide.ArrowDown size={10} className="mx-auto my-0.5 text-slate-300" />
                                                 <div className="text-[10px] font-bold text-rose-500">{new Date(req.expectedReturn).toLocaleDateString()}</div>
                                             </td>
-
-                                            {/* 🚦 สถานะปัจจุบัน */}
-                                            <td className="p-4 text-center">
+                                            <td className="p-5 text-center">
                                                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border tracking-wider
-                ${req.status === 'APPROVED' ? 'bg-indigo-50 text-indigo-600 border-indigo-100 animate-pulse' :
+                                                    ${req.status === 'APPROVED' ? 'bg-indigo-50 text-indigo-600 border-indigo-100 animate-pulse' :
                                                         req.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                                             req.status === 'RETURNED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                                                 'bg-rose-50 text-rose-600 border-rose-100'}`}>
@@ -170,24 +164,19 @@ const ManageRequests = () => {
                                                                 req.status === 'REJECTED' ? 'ไม่อนุมัติ' : req.status}
                                                 </span>
                                             </td>
-
-                                            {/* 🎮 ปุ่มสั่งการ (HR & User Friendly) */}
-                                            <td className="p-4">
+                                            <td className="p-5">
                                                 <div className="flex justify-center gap-2">
                                                     {isAdmin && (
                                                         <div className="flex items-center gap-2">
-                                                            {/* กรณีต้องการลบรายการ */}
                                                             {req.status === 'DELETE' ? (
                                                                 <button onClick={() => handlePermanentDelete(req.id, req.asset.name)} className="px-3 py-1.5 bg-rose-600 text-white rounded-xl font-bold text-[10px] uppercase hover:bg-rose-800 transition flex items-center gap-1.5 shadow-lg shadow-rose-100">
-                                                                    <Lucide.Skull size={12} /> ยืนยันลบถาวร
+                                                                    <Lucide.Skull size={12} /> ลบถาวร
                                                                 </button>
                                                             ) : (
                                                                 <button onClick={() => handleAction(req.id, 'DELETE', req.asset.name)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors" title="ย้ายไปถังขยะ">
                                                                     <Lucide.Trash2 size={16} />
                                                                 </button>
                                                             )}
-
-                                                            {/* จัดการคำขอใหม่ */}
                                                             {req.status === 'PENDING' && (
                                                                 <div className="flex gap-2">
                                                                     <button onClick={() => handleAction(req.id, 'APPROVED', req.asset.name)} className="px-4 py-1.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase hover:bg-indigo-600 transition shadow-md flex items-center gap-1.5">
@@ -200,18 +189,14 @@ const ManageRequests = () => {
                                                             )}
                                                         </div>
                                                     )}
-
-                                                    {/* การรับคืนอุปกรณ์ */}
                                                     {req.status === 'APPROVED' && (
                                                         <button onClick={() => handleAction(req.id, 'RETURNED', req.asset.name)} className="px-5 py-2 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase hover:bg-emerald-600 shadow-lg shadow-emerald-50 flex items-center gap-2 active:scale-95 transition-all">
                                                             <Lucide.RotateCcw size={13} /> รับคืนอุปกรณ์
                                                         </button>
                                                     )}
-
-                                                    {/* แสดงข้อความเมื่อทำรายการเสร็จสิ้น */}
                                                     {req.status === 'RETURNED' && (
-                                                        <div className="flex items-center gap-1.5 text-emerald-500 font-black text-[10px] uppercase bg-emerald-50 px-4 py-1.5 rounded-xl border border-emerald-100">
-                                                            <Lucide.CheckCircle2 size={14} /> ทำรายการสำเร็จ
+                                                        <div className="flex items-center gap-1.5 text-emerald-500 font-black text-[9px] uppercase bg-emerald-50 px-4 py-1.5 rounded-xl border border-emerald-100">
+                                                            <Lucide.CheckCircle2 size={14} /> คืนสำเร็จ
                                                         </div>
                                                     )}
                                                 </div>
@@ -232,7 +217,7 @@ const ManageRequests = () => {
                         </tbody>
                     </table>
                 </div>
-                <div className="p-5 bg-slate-50/50 border-t border-slate-100">
+                <div className="p-6 bg-slate-50/50 border-t border-slate-100">
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}

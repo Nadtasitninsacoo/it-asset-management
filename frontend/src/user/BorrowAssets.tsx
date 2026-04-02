@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import Swal from 'sweetalert2';
-import { Search, Package, ArrowRight, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Package, ArrowRight, Filter, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { notify } from '../utils/swal';
 
 type Asset = {
@@ -46,15 +46,12 @@ const BorrowAssets = () => {
 
     const filteredAssets = assets.filter(asset => {
         const keywords = searchQuery.toLowerCase().trim().split(' ');
-
         const name = asset.name?.toLowerCase() || '';
         const serial = asset.serialNumber?.toLowerCase() || '';
         const category = asset.category?.toLowerCase() || '';
 
         return keywords.every(word =>
-            name.includes(word) ||
-            serial.includes(word) ||
-            category.includes(word)
+            name.includes(word) || serial.includes(word) || category.includes(word)
         );
     });
 
@@ -140,41 +137,42 @@ const BorrowAssets = () => {
     };
 
     return (
-        <div className="min-h-full font-sans text-slate-900">
-            <header className="mb-10 flex justify-between items-end">
+        <div className="p-4 md:p-0 min-h-full font-sans text-slate-900">
+            <header className="mb-10 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
-                    <h3 className="text-3xl font-black text-slate-800 tracking-tight text-slate-800">Central warehouse</h3>
-                    <p className="text-slate-400 text-sm font-medium mt-1">คลังพัสดุสำหรับเบิกยืมอุปกรณ์</p>
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter uppercase leading-none">Central warehouse</h3>
+                    <p className="text-slate-400 text-xs md:text-sm font-bold mt-2 uppercase tracking-widest">คลังพัสดุสำหรับเบิกยืมอุปกรณ์</p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="relative group">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                    <div className="relative group w-full sm:w-80">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="ค้นหา: ชื่อ / หมวดหมู่ / รหัสอุปกรณ์"
-                            className="bg-white border border-slate-100 pl-12 pr-6 py-3 rounded-[1.5rem] text-sm focus:border-indigo-200 focus:ring-[8px] focus:ring-indigo-50/50 outline-none w-80 shadow-sm transition-all"
+                            placeholder="ค้นหาอุปกรณ์..."
+                            className="w-full bg-white border border-slate-100 pl-12 pr-6 py-3.5 rounded-2xl text-sm focus:border-indigo-200 focus:ring-4 focus:ring-indigo-50/50 outline-none shadow-sm transition-all font-bold"
                         />
                     </div>
-                    <button className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
+                    <button className="hidden sm:flex p-3.5 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
                         <Filter size={20} />
                     </button>
                 </div>
             </header>
 
             {loading ? (
-                <div className="flex justify-center items-center h-64 text-slate-400 font-bold uppercase tracking-widest animate-pulse">
-                    กำลังตรวจสอบคลังยุทโธปกรณ์...
+                <div className="flex flex-col justify-center items-center h-64 gap-4 text-slate-300 font-black uppercase tracking-[0.3em] animate-pulse">
+                    <Loader2 size={40} className="animate-spin text-indigo-500" />
+                    <span className="text-[10px]">Scanning Inventory...</span>
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 text-slate-900">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                         {filteredAssets.map((asset) => (
-                            <div key={asset.id} className="bg-white rounded-[2.5rem] border border-slate-50 p-5 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-500 group relative">
+                            <div key={asset.id} className="bg-white rounded-[2.5rem] border border-slate-50 p-5 hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-500 group relative flex flex-col h-full">
                                 <div className="absolute top-5 right-5 z-10">
                                     <span
-                                        className={`text-[10px] font-black px-3 py-1 rounded-full border uppercase ${asset.status === 'AVAILABLE'
+                                        className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-widest ${asset.status === 'AVAILABLE'
                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50'
                                             : 'bg-rose-50 text-rose-600 border-rose-100/50'
                                             }`}
@@ -182,61 +180,60 @@ const BorrowAssets = () => {
                                         {asset.status === 'AVAILABLE' ? 'Available' : asset.status}
                                     </span>
                                 </div>
-                                <div className="h-48 bg-slate-50 rounded-[2rem] mb-6 overflow-hidden text-center flex items-center justify-center">
+                                <div className="h-44 md:h-48 bg-slate-50 rounded-[2rem] mb-6 overflow-hidden flex items-center justify-center border border-slate-50">
                                     <img
                                         src={asset.image || 'https://via.placeholder.com/400x300?text=No+Image'}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         alt={asset.name}
+                                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=No+Image'; }}
                                     />
                                 </div>
-                                <div className="px-2">
-                                    <h3 className="font-bold text-slate-800 text-lg mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1">{asset.name}</h3>
-                                    <p className="text-xs text-slate-400 font-bold mb-6 flex items-center gap-1">
-                                        <Package size={12} /> รหัส: {asset.serialNumber}
+                                <div className="px-1 flex flex-col flex-1">
+                                    <h3 className="font-black text-slate-800 text-base mb-1 group-hover:text-indigo-600 transition-colors line-clamp-1 uppercase tracking-tight">{asset.name}</h3>
+                                    <p className="text-[10px] text-slate-400 font-bold mb-6 flex items-center gap-1.5 uppercase">
+                                        <Package size={12} className="text-indigo-400" /> S/N: {asset.serialNumber}
                                     </p>
                                     <button
                                         onClick={() => handleBorrowRequest(asset)}
                                         disabled={asset.status !== 'AVAILABLE'}
-                                        className={`relative overflow-hidden w-full py-3 text-white font-bold text-sm rounded-xl transition-all duration-300 ${asset.status === 'AVAILABLE'
-                                            ? 'bg-gray-900 hover:scale-105 active:scale-95'
-                                            : 'bg-slate-300 cursor-not-allowed'
+                                        className={`mt-auto relative overflow-hidden w-full py-4 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl transition-all duration-300 ${asset.status === 'AVAILABLE'
+                                            ? 'bg-slate-900 hover:bg-indigo-600 active:scale-95 shadow-lg shadow-slate-200'
+                                            : 'bg-slate-200 cursor-not-allowed text-slate-400'
                                             }`}
                                     >
                                         <span className="relative z-10 flex items-center justify-center gap-2">
-                                            {asset.status === 'AVAILABLE' ? 'ทำเรื่องขอเบิกยืม' : 'ไม่พร้อมให้บริการ'}
-                                            {asset.status === 'AVAILABLE' && <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-2" />}
+                                            {asset.status === 'AVAILABLE' ? 'Request Item' : 'Busy'}
+                                            {asset.status === 'AVAILABLE' && <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1.5" />}
                                         </span>
-                                        {asset.status === 'AVAILABLE' && (
-                                            <>
-                                                <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-pink-500 to-purple-500 opacity-40 animate-lines pointer-events-none"></span>
-                                            </>
-                                        )}
                                     </button>
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-12 flex justify-center items-center gap-3 pb-10">
+                    <div className="mt-12 mb-10 flex justify-center items-center gap-2 md:gap-3 overflow-x-auto py-4">
                         <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-all shadow-sm">
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={18} />
                         </button>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 md:gap-2">
                             {[...Array(totalPages)].map((_, idx) => (
-                                <button key={idx} onClick={() => setCurrentPage(idx + 1)} className={`w-11 h-11 rounded-2xl font-bold text-sm transition-all ${currentPage === idx + 1 ? 'bg-gray-900 text-white shadow-lg' : 'bg-white border border-slate-100 text-slate-500 hover:border-indigo-200'}`}>
+                                <button key={idx} onClick={() => setCurrentPage(idx + 1)} className={`w-10 h-10 md:w-11 md:h-11 rounded-2xl font-black text-[10px] md:text-xs transition-all ${currentPage === idx + 1 ? 'bg-slate-900 text-white shadow-xl scale-110' : 'bg-white border border-slate-100 text-slate-500 hover:border-indigo-200'}`}>
                                     {idx + 1}
                                 </button>
                             ))}
                         </div>
                         <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 disabled:opacity-30 transition-all shadow-sm">
-                            <ChevronRight size={20} />
+                            <ChevronRight size={18} />
                         </button>
                     </div>
                 </>
             )}
 
             {!loading && filteredAssets.length === 0 && (
-                <div className="text-center py-20 text-slate-400 font-bold">ไม่พบยุทโธปกรณ์ที่ท่านต้องการในขณะนี้</div>
+                <div className="flex flex-col items-center justify-center py-32 text-slate-300 gap-4">
+                    <Search size={48} className="opacity-20" />
+                    <p className="font-black uppercase text-xs tracking-widest">No assets found in warehouse</p>
+                </div>
             )}
         </div>
     );

@@ -1,7 +1,11 @@
 import { Bell, ChevronDown, Menu } from 'lucide-react';
 import { notify } from '../utils/swal';
 
-const Navbar = () => {
+interface NavbarProps {
+    onMenuClick?: () => void;
+}
+
+const Navbar = ({ onMenuClick }: NavbarProps) => {
     const userRaw = localStorage.getItem('user');
     const userData = userRaw ? JSON.parse(userRaw) : { name: 'Guest', role: 'USER' };
 
@@ -15,9 +19,11 @@ const Navbar = () => {
 
     return (
         <nav className="h-16 border-b border-slate-100 px-6 md:px-10 flex items-center justify-between bg-white/70 backdrop-blur-xl sticky top-0 z-50 w-full transition-all duration-300">
-            {/* Left side */}
             <div className="flex items-center gap-6 flex-1">
-                <button className="md:hidden p-2 text-slate-400">
+                <button
+                    onClick={onMenuClick}
+                    className="lg:hidden p-2 text-slate-400 hover:bg-slate-50 rounded-xl transition-colors"
+                >
                     <Menu size={20} />
                 </button>
             </div>

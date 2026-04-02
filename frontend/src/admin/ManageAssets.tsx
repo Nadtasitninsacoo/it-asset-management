@@ -34,10 +34,8 @@ const ManageAssets = () => {
     const fetchAssets = async (page: number) => {
         try {
             const response = await api.get(`/assets?page=${page}`);
-
             if (response.data && response.data.data) {
                 setAssets(response.data.data);
-
                 if (response.data.meta) {
                     setTotalPages(response.data.meta.lastPage || 1);
                 }
@@ -62,7 +60,6 @@ const ManageAssets = () => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const fileInput = formData.get('file') as File | null;
-
         const sendData = new FormData();
         sendData.append('name', formData.get('name') as string);
         sendData.append('serialNumber', formData.get('serialNumber') as string);
@@ -83,7 +80,6 @@ const ManageAssets = () => {
             } else {
                 await api.post(endpoint, sendData, { headers: { 'Content-Type': 'multipart/form-data' } });
             }
-
             notify.success('สำเร็จ', 'บันทึกข้อมูลยุทโธปกรณ์แล้ว');
             setIsModalOpen(false);
             fetchAssets(currentPage);
@@ -111,10 +107,11 @@ const ManageAssets = () => {
     };
 
     return (
-        <div className="p-8 bg-gray-50 min-h-screen">
-            <div className="flex justify-between items-center mb-8">
+        <div className="p-4 md:p-8 bg-gray-50 min-h-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Manage Assets</h3>
+                    <h3 className="text-xl md:text-2xl font-black text-gray-800 uppercase tracking-tight">Manage Assets</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">คลังควบคุมพัสดุส่วนกลาง</p>
                 </div>
                 <button
                     onClick={() => {
@@ -122,80 +119,86 @@ const ManageAssets = () => {
                         setSelectedFileName("");
                         setIsModalOpen(true);
                     }}
-                    className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold shadow-sm hover:bg-indigo-700 transition-all flex items-center gap-1.5 text-[11px] uppercase tracking-wider"
+                    className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 text-[11px] uppercase tracking-wider"
                 >
-                    <Lucide.Plus size={14} strokeWidth={3} />
-                    <span>เพิ่มอุปกรณ์</span>
+                    <Lucide.Plus size={16} strokeWidth={3} />
+                    <span>เพิ่มยุทโธปกรณ์</span>
                 </button>
             </div>
 
-            <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-xs">
-                    <thead>
-                        <tr className="bg-gray-100/40 border-b border-gray-100">
-                            <th className="p-2 font-semibold text-gray-400 uppercase tracking-wider text-[9px]">IMAGE</th>
-                            <th className="p-2 font-semibold text-gray-400 uppercase tracking-wider text-[9px]">NAME</th>
-                            <th className="p-2 font-semibold text-gray-400 uppercase tracking-wider text-[9px]">CATEGORY</th>
-                            <th className="p-2 font-semibold text-gray-400 uppercase tracking-wider text-[9px]">STATUS</th>
-                            <th className="p-2 font-semibold text-gray-400 uppercase tracking-wider text-[9px] text-center">ACTION</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {assets.map(asset => (
-                            <tr key={asset.id} className="hover:bg-gray-50/40 transition">
-                                <td className="p-2">
-                                    <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden border flex items-center justify-center">
-                                        <img
-                                            src={getImageUrl(asset.image)}
-                                            alt={asset.name}
-                                            className="w-full h-full object-cover hover:scale-110 transition"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/100?text=No+Image';
-                                            }}
-                                        />
-                                    </div>
-                                </td>
-                                <td className="p-2 font-semibold text-gray-700">{asset.name}</td>
-                                <td className="p-2">
-                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md text-[9px] font-bold uppercase">
-                                        {asset.category}
-                                    </span>
-                                </td>
-                                <td className="p-2">
-                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase
-                                        ${asset.status === 'AVAILABLE' ? 'bg-green-100 text-green-600' :
-                                            asset.status === 'REPAIRING' ? 'bg-rose-100 text-rose-600' :
-                                                asset.status === 'BORROWED' ? 'bg-amber-100 text-amber-600' :
-                                                    'bg-gray-100 text-gray-500'}`}>
-                                        {asset.status === 'AVAILABLE' && 'พร้อมใช้'}
-                                        {asset.status === 'BORROWED' && 'ถูกยืม'}
-                                        {asset.status === 'REPAIRING' && 'ส่งซ่อม'}
-                                        {asset.status === 'LOST' && 'สูญหาย'}
-                                    </span>
-                                </td>
-                                <td className="p-2 text-center flex justify-center gap-1">
-                                    <button
-                                        onClick={() => {
-                                            setCurrentAsset(asset);
-                                            setSelectedFileName(asset.image?.split("/").pop() || "");
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-md text-[9px] font-bold hover:bg-yellow-200 transition"
-                                    >
-                                        EDIT
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(asset.id)}
-                                        className="bg-red-100 text-red-600 px-2 py-0.5 rounded-md text-[9px] font-bold hover:bg-red-200 transition"
-                                    >
-                                        DELETE
-                                    </button>
-                                </td>
+            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                {/* 🚩 ฐานทัพลับ: ระบบเลื่อนตารางในมือถือ */}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-xs min-w-[700px]">
+                        <thead>
+                            <tr className="bg-gray-50/50 border-b border-gray-100">
+                                <th className="p-4 text-left font-bold text-gray-400 uppercase tracking-wider text-[9px]">Preview</th>
+                                <th className="p-4 text-left font-bold text-gray-400 uppercase tracking-wider text-[9px]">Asset Name</th>
+                                <th className="p-4 text-left font-bold text-gray-400 uppercase tracking-wider text-[9px]">Category</th>
+                                <th className="p-4 text-left font-bold text-gray-400 uppercase tracking-wider text-[9px]">Status</th>
+                                <th className="p-4 font-bold text-gray-400 uppercase tracking-wider text-[9px] text-center">Command</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <div className="p-4 border-t border-gray-50">
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {assets.map(asset => (
+                                <tr key={asset.id} className="hover:bg-gray-50/40 transition">
+                                    <td className="p-4">
+                                        <div className="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center shadow-sm">
+                                            <img
+                                                src={getImageUrl(asset.image)}
+                                                alt={asset.name}
+                                                className="w-full h-full object-cover hover:scale-110 transition duration-500"
+                                                onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/100?text=No+Image'; }}
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="font-bold text-gray-800 text-sm">{asset.name}</div>
+                                        <div className="text-[10px] text-slate-400 font-mono">SN: {asset.serialNumber}</div>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-tighter">
+                                            {asset.category}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter border
+                                            ${asset.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                asset.status === 'REPAIRING' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                    asset.status === 'BORROWED' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                        'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                            {asset.status === 'AVAILABLE' && '🟢 พร้อมใช้งาน'}
+                                            {asset.status === 'BORROWED' && '📤 ถูกยืมออก'}
+                                            {asset.status === 'REPAIRING' && '🛠️ ส่งซ่อม'}
+                                            {asset.status === 'LOST' && '❌ สูญหาย'}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <div className="flex justify-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setCurrentAsset(asset);
+                                                    setSelectedFileName(asset.image?.split("/").pop() || "");
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                            >
+                                                <Lucide.Edit3 size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(asset.id)}
+                                                className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                            >
+                                                <Lucide.Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="p-6 bg-gray-50/30 border-t border-gray-100">
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -204,66 +207,57 @@ const ManageAssets = () => {
                 </div>
             </div>
 
+            {/* 🚩 Modal ปรับแต่งความกว้างสำหรับมือถือ */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/20">
-                            <h3 className="text-lg font-black text-slate-800 tracking-tight">
-                                {currentAsset ? '📝 EDIT ASSET' : '🚀 NEW ASSET'}
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-300">
+                        <div className="sticky top-0 z-10 p-6 border-b border-gray-50 flex justify-between items-center bg-white/80 backdrop-blur-md">
+                            <h3 className="text-lg font-black text-slate-800 tracking-tight uppercase">
+                                {currentAsset ? '📝 Edit Asset' : '🚀 New Asset'}
                             </h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-slate-300 hover:text-rose-500 transition-colors">
-                                <Lucide.XCircle size={24} />
+                                <Lucide.XCircle size={28} />
                             </button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-7 space-y-4">
-                            <div className="space-y-3">
-                                <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Asset Image</label>
-                                <div className="flex flex-col gap-2">
+                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                            <div className="space-y-4">
+                                <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] ml-1">Asset Imagery</label>
+                                <div className="space-y-3">
                                     <input
                                         name="image_url"
                                         defaultValue={currentAsset?.image || ''}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[11px] focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold transition-all"
-                                        placeholder="Paste Image URL here..."
+                                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold transition-all"
+                                        placeholder="Image URL Link..."
                                     />
-                                    <label className="flex items-center justify-center w-full py-2.5 bg-indigo-50 border border-dashed border-indigo-200 rounded-xl cursor-pointer hover:bg-indigo-100 transition-all text-[10px] font-black text-indigo-600 uppercase tracking-tight">
-                                        <Lucide.UploadCloud size={14} className="mr-2" />
-                                        {selectedFileName ? 'Change Image' : 'Upload Local File'}
+                                    <label className="flex items-center justify-center w-full py-4 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-2xl cursor-pointer hover:bg-indigo-100 transition-all text-xs font-black text-indigo-600 uppercase">
+                                        <Lucide.UploadCloud size={18} className="mr-2" />
+                                        {selectedFileName ? 'Change File' : 'Upload Local File'}
                                         <input type="file" name="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                     </label>
-                                    {selectedFileName && (
-                                        <p className="text-[9px] text-slate-400 font-bold ml-1 italic truncate">📎 {selectedFileName}</p>
-                                    )}
+                                    {selectedFileName && <p className="text-[10px] text-indigo-400 font-bold italic text-center">📎 {selectedFileName}</p>}
                                 </div>
                             </div>
-                            <div className="space-y-4">
+
+                            <div className="space-y-5">
                                 <div>
-                                    <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Asset Name</label>
-                                    <input name="name" defaultValue={currentAsset?.name} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-sm transition-all" required />
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">General Info</label>
+                                    <input name="name" placeholder="Asset Name" defaultValue={currentAsset?.name} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold text-sm transition-all" required />
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Category</label>
-                                        <select name="category" defaultValue={currentAsset?.category || 'Computer'} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-xs appearance-none">
-                                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Serial Number</label>
-                                        <input name="serialNumber" defaultValue={currentAsset?.serialNumber} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-sm transition-all" required />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-[9px] font-black text-indigo-400 uppercase mb-1.5 ml-1 tracking-widest">Current Status</label>
-                                    <select name="status" defaultValue={currentAsset?.status || 'AVAILABLE'} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500/20 outline-none font-bold text-xs appearance-none">
-                                        <option value="AVAILABLE">✅ พร้อมใช้งาน</option>
-                                        <option value="BORROWED">📤 ถูกยืมออก</option>
-                                        <option value="REPAIRING">🛠️ ส่งซ่อมบำรุง</option>
-                                        <option value="LOST">❌ สูญหาย</option>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <select name="category" defaultValue={currentAsset?.category || 'Computer'} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold text-xs appearance-none">
+                                        {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
+                                    <input name="serialNumber" placeholder="Serial S/N" defaultValue={currentAsset?.serialNumber} className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold text-sm transition-all" required />
                                 </div>
+                                <select name="status" defaultValue={currentAsset?.status || 'AVAILABLE'} className="w-full px-5 py-4 bg-slate-900 text-white rounded-2xl focus:ring-4 focus:ring-indigo-500/20 outline-none font-bold text-xs">
+                                    <option value="AVAILABLE">✅ พร้อมใช้งาน (AVAILABLE)</option>
+                                    <option value="BORROWED">📤 ถูกยืมออก (BORROWED)</option>
+                                    <option value="REPAIRING">🛠️ ส่งซ่อม (REPAIRING)</option>
+                                    <option value="LOST">❌ สูญหาย (LOST)</option>
+                                </select>
                             </div>
-                            <button type="submit" className="w-full py-4 mt-2 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-indigo-600 shadow-lg shadow-slate-200 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
-                                <Lucide.Save size={16} /> บันทึกอุปกรณ์
+                            <button type="submit" className="w-full py-5 mt-4 bg-indigo-600 text-white text-xs font-black rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-2 uppercase tracking-widest">
+                                <Lucide.Save size={18} /> Confirm & Save
                             </button>
                         </form>
                     </div>
