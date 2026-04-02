@@ -1,4 +1,4 @@
-// src/components/ProtectedRoute.tsx
+import { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 
 interface ProtectedRouteProps {
@@ -6,20 +6,22 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ roleRequired }: ProtectedRouteProps) => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        const role = localStorage.getItem('role')?.trim().toUpperCase() || 'USER';
+        setUserRole(token ? role : null);
+    }, []);
+
+    if (userRole === null) return null; // รอโหลดก่อน render
+
+    if (!localStorage.getItem('access_token')) {
         return <Navigate to="/login" replace />;
     }
 
-    const userRoleRaw = localStorage.getItem('role');
-    const userRole = userRoleRaw ? userRoleRaw.toString().trim().toUpperCase() : 'USER';
-
     if (roleRequired && userRole !== roleRequired) {
-        if (userRole === 'ADMIN') {
-            return <Navigate to="/admin-dashboard" replace />;
-        } else {
-            return <Navigate to="/borrow-assets" replace />;
-        }
+        return <Navigate to={userRole === 'ADMIN' ? '/admin-dashboard' : '/borrow-assets'} replace />;
     }
 
     return <Outlet />;

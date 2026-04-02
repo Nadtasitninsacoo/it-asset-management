@@ -17,20 +17,22 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route element={<ProtectedRoute />}>
+        {/* USER Protected */}
+        <Route element={<ProtectedRoute roleRequired="USER" />}>
           <Route element={<MainLayout />}>
-
             <Route index element={<Navigate to="borrow-assets" replace />} />
             <Route path="borrow-assets" element={<BorrowAssets />} />
             <Route path="my-history" element={<MyHistory />} />
+          </Route>
+        </Route>
 
-            <Route element={<ProtectedRoute roleRequired="ADMIN" />}>
-              <Route path="admin-dashboard" element={<AdminDashboard />} />
-              <Route path="manage-assets" element={<ManageAssets />} />
-              <Route path="manage-users" element={<ManageUsers />} />
-              <Route path="manage-requests" element={<ManageRequests />} />
-            </Route>
-
+        {/* ADMIN Protected */}
+        <Route element={<ProtectedRoute roleRequired="ADMIN" />}>
+          <Route element={<MainLayout />}>
+            <Route path="admin-dashboard" element={<AdminDashboard />} />
+            <Route path="manage-assets" element={<ManageAssets />} />
+            <Route path="manage-users" element={<ManageUsers />} />
+            <Route path="manage-requests" element={<ManageRequests />} />
           </Route>
         </Route>
 

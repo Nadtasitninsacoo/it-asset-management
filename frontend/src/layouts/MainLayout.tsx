@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import AdminFooter from '../components/AdminFooter';
 import { Outlet } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type User = {
     name: string;
@@ -11,30 +11,41 @@ type User = {
 };
 
 const MainLayout = () => {
-    const userData = useMemo<User | null>(() => {
-        try {
-            const raw = localStorage.getItem('user');
-            return raw ? (JSON.parse(raw) as User) : null;
-        } catch (error) {
-            console.error('Invalid user data');
-            return null;
+    const [userData, setUserData] = useState<User | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // อ่าน user จาก localStorage เมื่อ component mount
+    useEffect(() => {
+        const raw = localStorage.getItem('user');
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw) as User;
+                setUserData(parsed);
+            } catch (err) {
+                console.error('Invalid user data');
+                setUserData(null);
+            }
         }
     }, []);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
         <div className="relative flex h-screen w-full bg-[#fcfcfd] overflow-hidden font-sans">
-            <div className={`fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            {/* Overlay */}
+            <div
+                className={`fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
                 onClick={() => setIsSidebarOpen(false)}
             />
 
-            <div className={`fixed inset-y-0 left-0 z-50 transform bg-white transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                <Sidebar
-                    isOpen={isSidebarOpen}
-                    onClose={() => setIsSidebarOpen(false)}
-                />
+            {/* Sidebar */}
+            <div
+                className={`fixed inset-y-0 left-0 z-50 transform bg-white transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
+            >
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             </div>
 
+            {/* Main content */}
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
