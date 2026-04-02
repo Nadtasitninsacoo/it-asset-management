@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import * as Lucide from 'lucide-react';
 import { notify } from '../utils/swal';
 
@@ -8,8 +8,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
-    const navigate = useNavigate();
-
     const rawRole = localStorage.getItem('role');
     const userRole = rawRole ? rawRole.trim().toUpperCase() : 'USER';
 
@@ -56,7 +54,7 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
         const confirm = await notify.confirm('Sign Out', 'คุณต้องการออกจากระบบใช่หรือไม่?');
         if (confirm) {
             localStorage.clear();
-            navigate('/login');
+            window.location.href = '/login';
         }
     };
 
@@ -71,23 +69,23 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
         >
             <button
                 onClick={() => onClose?.()}
-                className="lg:hidden absolute top-4 right-4 text-slate-400 hover:text-rose-500"
+                className="lg:hidden absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors"
             >
                 <Lucide.XCircle size={22} />
             </button>
 
             <div className="mb-12 flex items-center gap-3.5 px-3">
-                <div className="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center">
+                <div className="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
                     <Lucide.Cpu className="text-white" size={20} />
                 </div>
                 <div>
-                    <span className="text-lg font-black text-slate-800 uppercase">SENTINEL</span>
-                    <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Core System</div>
+                    <span className="text-lg font-black text-slate-800 uppercase tracking-tighter italic">SENTINEL</span>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase leading-none mt-0.5">Core System</div>
                 </div>
             </div>
 
-            <nav className="flex-1 space-y-1.5 overflow-y-auto">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-4">
+            <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-4 opacity-70">
                     {userRole === 'ADMIN' ? 'Strategic Control' : 'Personnel Access'}
                 </div>
 
@@ -99,12 +97,12 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
                         className={({ isActive }) => `
                             flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                             ${isActive
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-[1.02]'
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}
+                                ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02] font-bold'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600 font-medium'}
                         `}
                     >
                         {item.icon}
-                        <span className="text-sm font-bold uppercase tracking-tight">{item.label}</span>
+                        <span className="text-sm uppercase tracking-tight">{item.label}</span>
                     </NavLink>
                 ))}
             </nav>
