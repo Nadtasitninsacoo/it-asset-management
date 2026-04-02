@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
-    const userRole = userData?.role?.trim().toUpperCase() || 'USER';
+    const userRole = userData?.role?.toString().trim().toUpperCase() || 'USER';
     const isAdmin = userRole === 'ADMIN';
 
     const menuItems = [
@@ -19,6 +19,7 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
         { icon: <Lucide.ClipboardCheck size={18} />, label: 'Manage Requests', path: '/manage-requests', show: isAdmin },
         { icon: <Lucide.Settings size={18} />, label: 'Assets Control', path: '/manage-assets', show: isAdmin },
         { icon: <Lucide.Users size={18} />, label: 'Personnel', path: '/manage-users', show: isAdmin },
+
         { icon: <Lucide.Package size={18} />, label: 'Borrow Asset', path: '/borrow-assets', show: true },
         { icon: <Lucide.History size={18} />, label: 'Borrow History', path: '/my-history', show: true },
     ];
@@ -32,40 +33,48 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
     };
 
     return (
-        <aside className={`fixed top-0 left-0 h-full w-64 bg-white z-[150] transform transition-transform duration-300
+        <aside className={`fixed top-0 left-0 h-full w-64 bg-white z-[150] transform transition-transform duration-300 ease-in-out
             ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex flex-col px-5 py-8 border-r border-slate-100 shadow-sm`}>
 
-            <button onClick={() => onClose?.()} className="lg:hidden absolute top-4 right-4 text-slate-400 hover:text-rose-500">
+            <button onClick={() => onClose?.()} className="lg:hidden absolute top-4 right-4 text-slate-300 hover:text-rose-500 transition-colors">
                 <Lucide.XCircle size={22} />
             </button>
 
             <div className="mb-10 px-4 flex items-center gap-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-100">
                     <Lucide.Cpu size={18} />
                 </div>
                 <span className="text-xl font-black text-slate-800 tracking-tighter italic uppercase">Sentinel</span>
             </div>
 
             <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2 custom-scrollbar">
-                {menuItems.filter(item => item.show).map((item, idx) => (
-                    <NavLink
-                        key={idx}
-                        to={item.path}
-                        onClick={() => onClose?.()}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-bold text-sm
-                            ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
-                        }
-                    >
-                        {item.icon} <span className="uppercase tracking-tight">{item.label}</span>
-                    </NavLink>
-                ))}
+                {menuItems
+                    .filter(item => item.show)
+                    .map((item, idx) => (
+                        <NavLink
+                            key={idx}
+                            to={item.path}
+                            onClick={() => onClose?.()}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-bold text-sm
+                            ${isActive
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
+                            }
+                        >
+                            {item.icon} <span className="uppercase tracking-tight">{item.label}</span>
+                        </NavLink>
+                    ))}
             </nav>
 
+            {/* Sign Out Area */}
             <div className="mt-auto pt-6 border-t border-slate-50">
-                <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all group border-none bg-transparent cursor-pointer">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all group border-none bg-transparent cursor-pointer outline-none"
+                >
                     <Lucide.LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs font-black uppercase italic">Sign Out</span>
+                    <span className="text-xs font-black uppercase italic">Sign Out System</span>
                 </button>
             </div>
         </aside>
