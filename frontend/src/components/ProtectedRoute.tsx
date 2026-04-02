@@ -7,21 +7,38 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ roleRequired }: ProtectedRouteProps) => {
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
-        const role = localStorage.getItem('role')?.trim().toUpperCase() || 'USER';
-        setUserRole(token ? role : null);
+        const rawRole = localStorage.getItem('role');
+        const role = rawRole ? rawRole.trim().toUpperCase() : null;
+
+        if (token && role) {
+            setUserRole(role);
+        } else {
+            setUserRole(null);
+        }
+
+        setLoading(false);
     }, []);
 
-    if (userRole === null) return null; // รอโหลดก่อน render
+    if (loading) {
+        // รอโหลดค่า token/role
+        return (
+            <div className="flex items-center justify-center h-screen text-gray-500">
+                Loading...
+            </div>
+        );
+    }
 
-    if (!localStorage.getItem('access_token')) {
+    if (!userRole) {
         return <Navigate to="/login" replace />;
     }
 
     if (roleRequired && userRole !== roleRequired) {
-        return <Navigate to={userRole === 'ADMIN' ? '/admin-dashboard' : '/borrow-assets'} replace />;
+        const redirectPath = userRole === 'ADMIN' ? '/admin-dashboard' : '/borrow-assets';
+        return <Navigate to={redirectPath} replace />;
     }
 
     return <Outlet />;

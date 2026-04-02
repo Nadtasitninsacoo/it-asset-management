@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ClipboardCheck, RefreshCcw, LogOut } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Package, ClipboardCheck, RefreshCcw, LogOut, Menu } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 interface NavbarProps {
     onMenuClick?: () => void;
@@ -13,15 +13,17 @@ type User = {
 
 const Navbar = ({ onMenuClick }: NavbarProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [userData, setUserData] = useState<User | null>(null); // ❌ ใช้ null ก่อนโหลด
-    const navigate = useNavigate();
+    const [userData, setUserData] = useState<User | null>(null);
 
     useEffect(() => {
         const raw = localStorage.getItem('user');
         if (raw) {
             try {
                 const parsed = JSON.parse(raw) as User;
-                setUserData(parsed);
+                setUserData({
+                    ...parsed,
+                    role: parsed.role?.trim().toUpperCase() || 'USER'
+                });
             } catch {
                 setUserData({ name: 'Guest', role: 'USER' });
             }
@@ -39,34 +41,47 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/login');
+        window.location.href = '/login';
     };
 
-    // ⛔ ถ้า userData ยัง null ให้ return null (ไม่ render menu)
     if (!userData) return null;
 
     return (
         <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100] w-full">
             <div className="h-16 px-6 flex items-center justify-between">
-                <button onClick={() => onMenuClick?.()}>
-                    Menu
-                </button>
-                <div>{userData.name}</div>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => onMenuClick?.()}
+                        className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 rounded-xl transition-colors"
+                    >
+                        <Menu size={24} />
+                    </button>
+                    <span className="font-black text-slate-800 tracking-tighter uppercase italic">Sentinel</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="text-right hidden sm:block">
+                        <p className="text-sm font-bold text-slate-800 leading-none">{userData.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-wider">{userData.role}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black shadow-lg shadow-indigo-100 ring-2 ring-white">
+                        {userData.name.charAt(0).toUpperCase()}
+                    </div>
+                </div>
             </div>
 
-            {/* dropdown mobile */}
             <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-50
                 ${isDropdownOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="p-4 space-y-2">
                     {menuItems.map((item, idx) => (
-                        (!item.adminOnly || userData.role.toUpperCase() === 'ADMIN') && (
+                        (!item.adminOnly || userData.role === 'ADMIN') && (
                             <NavLink
                                 key={idx}
                                 to={item.path}
                                 onClick={() => setIsDropdownOpen(false)}
                                 className={({ isActive }) => `
                                     flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-sm transition-all
-                                    ${isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50'}
+                                    ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}
                                 `}
                             >
                                 {item.icon} {item.label}
