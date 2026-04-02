@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 
 interface ProtectedRouteProps {
@@ -6,39 +5,16 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ roleRequired }: ProtectedRouteProps) => {
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const token = localStorage.getItem('access_token');
+    const rawRole = localStorage.getItem('role');
+    const userRole = rawRole ? rawRole.trim().toUpperCase() : null;
 
-    useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        const rawRole = localStorage.getItem('role');
-        const role = rawRole ? rawRole.trim().toUpperCase() : null;
-
-        if (token && role) {
-            setUserRole(role);
-        } else {
-            setUserRole(null);
-        }
-
-        setLoading(false);
-    }, []);
-
-    if (loading) {
-        // รอโหลดค่า token/role
-        return (
-            <div className="flex items-center justify-center h-screen text-gray-500">
-                Loading...
-            </div>
-        );
-    }
-
-    if (!userRole) {
+    if (!token || !userRole) {
         return <Navigate to="/login" replace />;
     }
 
-    if (roleRequired && userRole !== roleRequired) {
-        const redirectPath = userRole === 'ADMIN' ? '/admin-dashboard' : '/borrow-assets';
-        return <Navigate to={redirectPath} replace />;
+    if (roleRequired === 'ADMIN' && userRole !== 'ADMIN') {
+        return <Navigate to="/borrow-assets" replace />;
     }
 
     return <Outlet />;

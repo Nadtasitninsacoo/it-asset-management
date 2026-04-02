@@ -17,22 +17,23 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* USER Protected */}
-        <Route element={<ProtectedRoute roleRequired="USER" />}>
+        {/* 🛡️ Protected Zone: ต้อง Login เท่านั้น */}
+        <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route index element={<Navigate to="borrow-assets" replace />} />
+
+            {/* 🧑‍🚀 พื้นที่ส่วนกลาง (User และ Admin เข้าได้ทั้งคู่) */}
+            <Route index element={<Navigate to="/borrow-assets" replace />} />
             <Route path="borrow-assets" element={<BorrowAssets />} />
             <Route path="my-history" element={<MyHistory />} />
-          </Route>
-        </Route>
 
-        {/* ADMIN Protected */}
-        <Route element={<ProtectedRoute roleRequired="ADMIN" />}>
-          <Route element={<MainLayout />}>
-            <Route path="admin-dashboard" element={<AdminDashboard />} />
-            <Route path="manage-assets" element={<ManageAssets />} />
-            <Route path="manage-users" element={<ManageUsers />} />
-            <Route path="manage-requests" element={<ManageRequests />} />
+            {/* 👑 เขตบัญชาการ (เฉพาะ ADMIN เท่านั้นที่ผ่านด่านนี้ได้) */}
+            <Route element={<ProtectedRoute roleRequired="ADMIN" />}>
+              <Route path="admin-dashboard" element={<AdminDashboard />} />
+              <Route path="manage-assets" element={<ManageAssets />} />
+              <Route path="manage-users" element={<ManageUsers />} />
+              <Route path="manage-requests" element={<ManageRequests />} />
+            </Route>
+
           </Route>
         </Route>
 

@@ -43,8 +43,8 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
             show: true
         },
         {
-            icon: <Lucide.RefreshCcw size={18} />,
-            label: 'Return Assets',
+            icon: <Lucide.History size={18} />,
+            label: 'Borrow History',
             path: '/my-history',
             show: true
         },
