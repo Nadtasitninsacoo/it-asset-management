@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, LogOut, LayoutDashboard, ClipboardCheck, Users, Package, } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard, ClipboardCheck, Users, Package, Settings, History } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { notify } from '../utils/swal';
 
@@ -34,7 +34,6 @@ const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
         <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100] w-full shadow-sm">
             <div className="h-16 px-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    {/* 🚩 ปุ่ม 3 ขีด: ทำหน้าที่เปิดทั้ง Sidebar และ Dropdown บนมือถือ */}
                     <button
                         onClick={() => {
                             setIsDropdownOpen(!isDropdownOpen);
@@ -47,7 +46,6 @@ const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
                     <span className="font-black text-slate-800 tracking-tighter uppercase italic text-xl">SENTINEL</span>
                 </div>
 
-                {/* ข้อมูลผู้ใช้ฝั่งขวา */}
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
                         <p className="text-sm font-bold text-slate-800 leading-none">{userData.name}</p>
@@ -59,7 +57,7 @@ const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
                 </div>
             </div>
 
-            {/* 🚩 Mobile Dropdown (รวมปุ่มตามบัญชาท่านจอมพล) */}
+            {/* 🚩 Mobile Dropdown: เพิ่มปุ่มที่หายไปให้ครบ 6 ปุ่ม */}
             <div className={`lg:hidden transition-all duration-300 ease-in-out bg-white border-t border-slate-50 overflow-hidden ${isDropdownOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="p-4 space-y-1">
                     {isAdmin && (
@@ -70,15 +68,26 @@ const Navbar = ({ onMenuClick }: { onMenuClick?: () => void }) => {
                             <NavLink to="/manage-requests" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-all">
                                 <ClipboardCheck size={18} /> Manage Requests
                             </NavLink>
-                            {/* ⚔️ ปุ่มจัดการระบบ (Personnel & Assets) รวมไว้ที่นี่ */}
+
+                            {/* ⚔️ เพิ่มปุ่ม Assets Control (พิกัดที่เคยหายไป) */}
+                            <NavLink to="/manage-assets" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                <Settings size={18} /> Assets Control
+                            </NavLink>
+
                             <NavLink to="/manage-users" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-indigo-600 bg-indigo-50 font-black hover:bg-indigo-100 transition-all">
                                 <Users size={18} /> Personnel Control
                             </NavLink>
                         </>
                     )}
+
                     <div className="border-t border-slate-50 my-2 pt-2">
                         <NavLink to="/borrow-assets" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50">
                             <Package size={18} /> Borrow Asset
+                        </NavLink>
+
+                        {/* ⚔️ เพิ่มปุ่ม Borrow History (พิกัดที่เคยหายไป) */}
+                        <NavLink to="/my-history" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-bold hover:bg-slate-50">
+                            <History size={18} /> Borrow History
                         </NavLink>
                     </div>
 
