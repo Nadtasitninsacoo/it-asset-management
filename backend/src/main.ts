@@ -4,45 +4,44 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
-let cachedApp: any;
+async function setupApp(app: NestExpressApplication) {
+  app.setGlobalPrefix('api');
+
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }));
+
+  app.useStaticAssets(join(process.cwd(), 'public', 'uploads'), {
+    prefix: '/uploads/',
+  });
+}
+
+let cachedServer: any;
 
 async function bootstrap() {
-  if (!cachedApp) {
+  if (!cachedServer) {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
-    app.setGlobalPrefix('api', {
-      exclude: ['/'],
-    });
-
-    app.useStaticAssets(join(process.cwd(), 'public', 'uploads'), {
-      prefix: '/uploads/',
-    });
-
-    app.enableCors({
-      origin: true,
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      credentials: true,
-    });
-
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }));
-
+    await setupApp(app);
     await app.init();
-    cachedApp = app.getHttpAdapter().getInstance();
+    cachedServer = app.getHttpAdapter().getInstance();
   }
-  return cachedApp;
+  return cachedServer;
 }
 
 if (process.env.NODE_ENV !== 'production') {
   const startLocal = async () => {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    app.setGlobalPrefix('api');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    app.enableCors();
+    await setupApp(app);
     const port = process.env.PORT ?? 3000;
     await app.listen(port);
+    console.log(`🛡️ Sentinel Backend Active on: http://localhost:${port}/api`);
   };
   startLocal();
 }

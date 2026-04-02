@@ -14,21 +14,16 @@ function App() {
   return (
     <Router>
       <Routes>
-
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/" element={<ProtectedRoute />}>
-
+        <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
 
             <Route index element={<Navigate to="borrow-assets" replace />} />
-
             <Route path="borrow-assets" element={<BorrowAssets />} />
-
             <Route path="my-history" element={<MyHistory />} />
 
-            {/* Admin */}
             <Route element={<ProtectedRoute roleRequired="ADMIN" />}>
               <Route path="admin-dashboard" element={<AdminDashboard />} />
               <Route path="manage-assets" element={<ManageAssets />} />
@@ -40,7 +35,6 @@ function App() {
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
-
       </Routes>
     </Router>
   );
