@@ -15,9 +15,9 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
     const isAdmin = userRole === 'ADMIN';
 
     const menuItems = [
-        // ✅ แก้ Logic: show เมื่อเป็น ADMIN (===)
         { icon: <Lucide.LayoutDashboard size={18} />, label: 'Dashboard', path: '/admin-dashboard', show: isAdmin },
         { icon: <Lucide.ClipboardCheck size={18} />, label: 'Manage Requests', path: '/manage-requests', show: isAdmin },
+        { icon: <Lucide.Settings size={18} />, label: 'Assets Control', path: '/manage-assets', show: isAdmin },
         { icon: <Lucide.Users size={18} />, label: 'Personnel', path: '/manage-users', show: isAdmin },
         { icon: <Lucide.Package size={18} />, label: 'Borrow Asset', path: '/borrow-assets', show: true },
         { icon: <Lucide.History size={18} />, label: 'Borrow History', path: '/my-history', show: true },
@@ -32,10 +32,10 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
     };
 
     return (
-        <aside className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300
+        <aside className={`fixed top-0 left-0 h-full w-64 bg-white z-[150] transform transition-transform duration-300
             ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex flex-col px-5 py-8 border-r border-slate-100 shadow-sm`}>
 
-            <button onClick={() => onClose?.()} className="lg:hidden absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition-colors">
+            <button onClick={() => onClose?.()} className="lg:hidden absolute top-4 right-4 text-slate-400 hover:text-rose-500">
                 <Lucide.XCircle size={22} />
             </button>
 
@@ -54,7 +54,7 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
                         onClick={() => onClose?.()}
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-bold text-sm
-                            ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-500 hover:bg-slate-50'}`
+                            ${isActive ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
                         }
                     >
                         {item.icon} <span className="uppercase tracking-tight">{item.label}</span>
@@ -62,9 +62,8 @@ const Sidebar = ({ isOpen, onClose, userData }: SidebarProps) => {
                 ))}
             </nav>
 
-            {/* ✅ กู้คืนปุ่มออกจากระบบที่ท้าย Sidebar */}
             <div className="mt-auto pt-6 border-t border-slate-50">
-                <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all group">
+                <button onClick={handleLogout} className="...">
                     <Lucide.LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
                     <span className="text-xs font-black uppercase italic">Sign Out</span>
                 </button>
