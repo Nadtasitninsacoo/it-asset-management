@@ -1,4 +1,3 @@
-/* ใส่ ./ เพื่อบังคับให้มันมองหาจากจุดที่ไฟล์ index.css นี้วางอยู่ */
 @import "tailwindcss";
 @import "./styles/variables.css"; 
 @import "./styles/main.css";
@@ -7,16 +6,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 3. การกำหนด Style หลักของระบบ */
 #root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  text-align: left;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
 }
 
 body {
