@@ -9,7 +9,9 @@ interface SidebarProps {
 
 const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
     const navigate = useNavigate();
-    const userRole = localStorage.getItem('role');
+
+    const rawRole = localStorage.getItem('role');
+    const userRole = rawRole ? rawRole.trim().toUpperCase() : 'USER';
 
     const menuItems = [
         {
@@ -80,11 +82,15 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
                 </div>
                 <div>
                     <span className="text-lg font-black text-slate-800 uppercase">SENTINEL</span>
-                    <div className="text-[10px] text-slate-400 font-bold tracking-widest">CORE SYSTEM</div>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Core System</div>
                 </div>
             </div>
 
             <nav className="flex-1 space-y-1.5 overflow-y-auto">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-4">
+                    {userRole === 'ADMIN' ? 'Strategic Control' : 'Personnel Access'}
+                </div>
+
                 {menuItems.filter(item => item.show).map((item, index) => (
                     <NavLink
                         key={index}
@@ -93,12 +99,12 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
                         className={({ isActive }) => `
                             flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                             ${isActive
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                : 'text-slate-500 hover:bg-slate-100'}
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-[1.02]'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}
                         `}
                     >
                         {item.icon}
-                        <span className="text-sm font-bold">{item.label}</span>
+                        <span className="text-sm font-bold uppercase tracking-tight">{item.label}</span>
                     </NavLink>
                 ))}
             </nav>
@@ -106,10 +112,10 @@ const Sidebar = ({ onClose, isOpen }: SidebarProps) => {
             <div className="mt-auto pt-6 border-t border-slate-50">
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-200"
+                    className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-200 group"
                 >
-                    <Lucide.LogOut size={18} />
-                    <span className="text-sm font-bold italic uppercase">Sign Out</span>
+                    <Lucide.LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+                    <span className="text-sm font-black italic uppercase">Sign Out</span>
                 </button>
             </div>
         </aside>
